@@ -1,9 +1,11 @@
 const debug = require('debug')('transcription:routes:index');
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const shortID = require('shortid').generate;
 
 const checkFileType = require('../bin/lib/valid-file');
-
+const tmpPath = process.env.TMP_PATH || '/tmp';
 
 router.get('/', function(req, res) {
   res.end();
@@ -17,17 +19,31 @@ router.get('/get/:UUID', function(req, res){
 router.post('/transribe', function(req, res) {
 
   let requestSize = 0;
-  const requestChunks = [];
-  let completeFile = undefined;
+  const tmpID = shortID();
+  let fileStream = undefined;
 
   req.on('data', function (data) {
-        requestSize += data.length;
-        requestChunks.push(data);
-        debug(`Got ${data.length} bytes. Total: ${requestSize}`);
+ 
+        // requestChunks.push(data);
 
-        if(requestChunks.length === 1){
-          debug( checkFileType(requestChunks[0]) );
+        if(requestSize === 0){
+          const validFile = checkFileType(data);
+          
+          debug(`Valid file?`, validFile);
+
+          if(!validFile){
+            res.status(422).end();
+            return;
+          } else {
+            fileStream = fs.createWriteStream(`${tmpPath}/${tmpID}`, { defaultEncoding : 'binary'} );
+          }
+
+        } else {
+          fileStream.write(data);
         }
+
+        requestSize += data.length;
+        debug(`Got ${data.length} bytes. Total: ${requestSize}`);
 
     });
 
@@ -35,15 +51,16 @@ router.post('/transribe', function(req, res) {
 
         debug(`Data requestSize: ${requestSize} bytes`);
         res.end(`OK\n`);
-        completeFile = Buffer.concat(requestChunks);
-        debug(completeFile, completeFile.length);
-        debug(requestChunks[0])
+
+        fileStream.end();
+        debug(`File written to: ${tmpPath}/${tmpID}`);
     });
 
     req.on('error', function(e) {
         debug('err:', e.message);
         res.status(500);
         res.end();
+        fileStream.end();
     });
 
 });
