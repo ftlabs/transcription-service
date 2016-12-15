@@ -5,6 +5,7 @@ const fs = require('fs');
 const shortID = require('shortid').generate;
 
 const checkFileType = require('../bin/lib/valid-file');
+const splitFile = require('../bin/lib/split-file');
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
 router.get('/', function(req, res) {
@@ -20,22 +21,20 @@ router.post('/transribe', function(req, res) {
 
   let requestSize = 0;
   const tmpID = shortID();
+  const destination = `${tmpPath}/${tmpID}`;
   let fileStream = undefined;
 
   req.on('data', function (data) {
- 
-        // requestChunks.push(data);
 
         if(requestSize === 0){
           const validFile = checkFileType(data);
           
           debug(`Valid file?`, validFile);
-          debug(data);
           if(!validFile){
             res.status(422).end();
             return;
           } else {
-            fileStream = fs.createWriteStream(`${tmpPath}/${tmpID}` );
+            fileStream = fs.createWriteStream(`${destination}`);
             fileStream.setDefaultEncoding('binary');
             fileStream.write(data);
           }
@@ -50,12 +49,12 @@ router.post('/transribe', function(req, res) {
     });
 
     req.on('end', function () {
-
+    
         debug(`Data requestSize: ${requestSize} bytes`);
-        res.end(`OK\n`);
-
+        res.end();
         fileStream.end();
-        debug(`File written to: ${tmpPath}/${tmpID}`);
+        debug(`File written to: ${destination}`);
+        splitFile(destination);
     });
 
     req.on('error', function(e) {
