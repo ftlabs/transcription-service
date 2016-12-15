@@ -30,12 +30,14 @@ router.post('/transribe', function(req, res) {
           const validFile = checkFileType(data);
           
           debug(`Valid file?`, validFile);
-
+          debug(data);
           if(!validFile){
             res.status(422).end();
             return;
           } else {
-            fileStream = fs.createWriteStream(`${tmpPath}/${tmpID}`, { defaultEncoding : 'binary'} );
+            fileStream = fs.createWriteStream(`${tmpPath}/${tmpID}` );
+            fileStream.setDefaultEncoding('binary');
+            fileStream.write(data);
           }
 
         } else {
