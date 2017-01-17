@@ -5,6 +5,15 @@ const validFileTypes = process.env.VALID_FILE_TYPES ? process.env.VALID_FILE_TYP
 module.exports = function(buff){
 
 	const fileInfo = filetype(buff);
-	return fileInfo !== null ? validFileTypes.indexOf( fileInfo.ext ) > -1 : false;
+
+	if(fileInfo !== null){
+
+		if(validFileTypes.indexOf(fileInfo.ext) > -1){
+			return { valid : true, data : fileInfo };
+		} else {
+			return { valid : false, data : fileInfo };			
+		}
+
+	}
 
 }
