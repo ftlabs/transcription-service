@@ -16,14 +16,6 @@ router.get('/', function(req, res) {
 // curl -i -X POST local.ft.com:3000/transribe -H "Content-Type: application/octet-stream" --data-binary "@path/to/file"
 router.post('/transcribe', function(req, res) {
 
-	/*receiveFile(req)
-		.then(file => extractAudio(file))
-		.then(file => splitAudio(file))
-		.then(files => {
-			console.log(files);
-		})
-	;*/
-
 	receiveFile(req)
 		.then(file => {
 			debug("Retrieved file:", file);
@@ -42,32 +34,6 @@ router.post('/transcribe', function(req, res) {
 	;
 
 	res.end();
-
-		/*.then(fileInfo => {
-			let audioToSplit = undefined;
-
-			if(fileInfo.ext !== 'wav'){
-				audioToSplit = extractAudio(fileInfo.destination, true);
-			} else {
-				audioToSplit = Promise.resolve(fileInfo.destination);
-			}
-
-			// splitFile(fileInfo.destination);
-
-			audioToSplit
-				.then(audioPath => splitAudio(audioPath))
-				.catch(err => {
-					debug(`An error occurred when trying to transcribe the audio`, err);
-				})
-			; 
-
-		})
-		.catch(err => {
-			debug(err);
-			res.status(500);
-			res.json(err);
-		})
-	;*/
 
 });
 
