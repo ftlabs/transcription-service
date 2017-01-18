@@ -6,6 +6,7 @@ const limitRequestSize = require('../bin/lib/limit-request-size');
 const receiveFile = require('../bin/lib/receive-file');
 const extractAudio = require('../bin/lib/extract-audio');
 const splitAudio = require('../bin/lib/split-audio');
+const transcribeAudio = require('../bin/lib/transcribe-audio');
 
 router.use(limitRequestSize);
 
@@ -27,6 +28,10 @@ router.post('/transcribe', function(req, res) {
 		})
 		.then(files => {
 			debug("Split Audio:", files);
+			return transcribeAudio(files);
+		})
+		.then(transcriptions => {
+			debug(transcriptions);
 		})
 		.catch(err => {
 			debug(err);

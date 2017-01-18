@@ -13,6 +13,7 @@
     "express": "~4.13.4",
     "ffmpeg-static": "^2.0.0",
     "file-type": "^4.0.0",
+    "google-cloud": "^0.45.2",
     "hbs": "~4.0.0",
     "morgan": "~1.7.0",
     "serve-favicon": "~2.3.0",
