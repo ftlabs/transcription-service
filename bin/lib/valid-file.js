@@ -14,6 +14,8 @@ module.exports = function(buff){
 			return { valid : false, data : fileInfo };			
 		}
 
+	} else {
+		return { valid : false };
 	}
 
 }

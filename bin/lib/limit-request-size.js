@@ -1,3 +1,4 @@
+// 40 Megabytes
 const MAX_FILE_SIZE = Number( process.env.MAX_FILE_SIZE ) || 41943040;
 
 module.exports = function(req, res, next){
