@@ -7,11 +7,12 @@ const tmpPath = process.env.TMP_PATH || '/tmp';
 
 module.exports = function(req){
 
+	const tmpID = shortID();
+	const destination = `${tmpPath}/${tmpID}`;
+
 	return new Promise( (resolve, reject) => {
 
 		let requestSize = 0;
-		const tmpID = shortID();
-		const destination = `${tmpPath}/${tmpID}`;
 		let fileStream = undefined;
 		let fileInfo = undefined
 
@@ -25,6 +26,7 @@ module.exports = function(req){
 					reject({
 						message : 'Invalid filetype'
 					});
+					fs.unlink(destination);
 					return;
 				} else {
 					fileStream = fs.createWriteStream(`${destination}`);
@@ -56,6 +58,10 @@ module.exports = function(req){
 			fileStream.end();
 		});
 
+	})
+	.catch(err => {
+		fs.unlink(destination);
+		throw err;
 	});
 
 };

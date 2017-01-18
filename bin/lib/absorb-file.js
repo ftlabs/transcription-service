@@ -11,13 +11,16 @@ const tmpPath = process.env.TMP_PATH || '/tmp';
 
 module.exports = function(url){
 
+	const jobID = shortID();
+	const destination = `${tmpPath}/${jobID}`;
+
 	return fetch(url, {method : "HEAD"})
 		.then(res => {
 			if(res.status !== 200){
 				throw res;
 			} else {
-				debug("Resource Size:", res.headers.get('content-length'));
 
+				debug("Resource Size:", res.headers.get('content-length'));
 				const resourceSize = Number(res.headers.get('content-length'));
 
 				if(resourceSize > MAX_FILE_SIZE){
@@ -25,6 +28,7 @@ module.exports = function(url){
 				} else {
 					return fetch(url);
 				}
+
 			}
 		})
 		.then(res => {
@@ -38,8 +42,6 @@ module.exports = function(url){
 
 			return new Promise( ( resolve, reject ) => {
 				
-				const jobID = shortID();
-				const destination = `${tmpPath}/${jobID}`;
 				let firstChunk = true;
 
 				debug('Writing file to:', destination);
@@ -49,7 +51,6 @@ module.exports = function(url){
 				res.body.pipe(fileStream);
 
 				res.body.on('data', chunk => {
-					// debug(chunk);
 
 					if(firstChunk){
 						firstChunk = false;
@@ -58,6 +59,7 @@ module.exports = function(url){
 							res.body.end();
 							reject('Not a valid file type');
 							fileStream.end();
+							fs.unlink(destination);
 						}
 
 					}
@@ -75,6 +77,7 @@ module.exports = function(url){
 		})
 		.catch(err => {
 			debug(err);
+			fs.unlink(destination);
 			throw err;
 		})
 	;

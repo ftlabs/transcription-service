@@ -23,7 +23,35 @@ router.get('/', function(req, res) {
   res.end();
 });
 
-// curl -i -X POST local.ft.com:3000/transribe -H "Content-Type: application/octet-stream" --data-binary "@path/to/file"
+router.get('/transcribe', function(req, res){
+
+	if(req.query.resource){
+		
+		debug(req.query.resource);
+
+		absorbFile(req.query.resource)
+			.then(file => prepareAudio(file))
+			.then(files => transcribeAudio(files))
+			.then(transcriptions => {
+				debug(transcriptions);
+			})
+			.catch(err => debug(err))
+		;
+
+		res.end();
+
+	} else {
+
+		res.status(422);
+		res.json({
+			status : `error`,
+			message : `You must pass a URL with the 'resource' query parameter pointing to the media file you wish to have transcribed.`
+		});
+	
+	}
+
+});
+
 router.post('/transcribe', function(req, res) {
 
 	receiveFile(req)
@@ -41,33 +69,5 @@ router.post('/transcribe', function(req, res) {
 
 });
 
-router.get('/transcribe', function(req, res){
-
-	if(req.query.resource){
-		
-		debug(req.query.resource);
-
-		absorbFile(req.query.resource)
-			.then(file => prepareAudio(file))
-			.then(files => transcribeAudio(files))
-			.then(transcriptions => {
-				debug(transcriptions);
-			})
-			.catch(err => debug(err))
-		;
-		
-		res.end();
-
-	} else {
-
-		res.status(422);
-		res.json({
-			status : `error`,
-			message : `You must pass a URL with the 'resource' query parameter pointing to the media file you wish to have transcribed.`
-		});
-	
-	}
-
-});
 
 module.exports = router;
