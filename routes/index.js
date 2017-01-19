@@ -29,6 +29,8 @@ router.get('/transcribe', function(req, res){
 
 	if(req.query.resource){
 
+		const jobID = shortID();
+		
 		absorbFile(req.query.resource)
 			.then(file => prepareAudio(file))
 			.then(files => transcribeAudio(files))
