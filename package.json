@@ -17,6 +17,7 @@
     "hbs": "~4.0.0",
     "morgan": "~1.7.0",
     "node-fetch": "^1.6.3",
+    "rimraf": "^2.5.4",
     "serve-favicon": "~2.3.0",
     "shortid": "^2.2.6"
   },

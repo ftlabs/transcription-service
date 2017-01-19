@@ -5,10 +5,10 @@ const ffmpeg = require('ffmpeg-static');
 const shortID = require('shortid').generate;
 const fileInfo = require('file-type');
 
-const cleanFile = require('./clean-file');
+// const cleanFile = require('./clean-file');
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
-module.exports = function(sourceFilePath){
+module.exports = function(sourceFilePath, jobID){
 
 	return new Promise( (resolve, reject) => {
 		debug('sourceFilePath:', sourceFilePath);
@@ -32,15 +32,12 @@ module.exports = function(sourceFilePath){
 							resolve(sourceFilePath);
 						} else {
 
-							const jobID = shortID();
+							// const jobID = shortID();
 
 							const outputDestination = `${tmpPath}/${jobID}.wav`;
 
-							const args = [
-								'-i',
-								sourceFilePath,
-								outputDestination
-							];
+							const args = ['-i', sourceFilePath, '-ac', '1', '-ab', '6400', '-ar', '16000', outputDestination, '-y']
+
 							debug(`Splitting files in ${tmpPath}/${jobID}/`);
 							const process = spawn(ffmpeg.path, args);
 							
@@ -62,7 +59,7 @@ module.exports = function(sourceFilePath){
 									resolve(outputDestination);
 								}
 
-								cleanFile(sourceFilePath);								
+								// cleanFile(sourceFilePath);								
 
 							});
 
