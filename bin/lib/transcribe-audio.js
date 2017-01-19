@@ -1,6 +1,8 @@
 const debug = require('debug')('bin:lib:transcribe-audio');
 const fs = require('fs');
 
+const cleanFile = require('./clean-file');
+
 const projectId = process.env.GCLOUD_PROJECT; // E.g. 'grape-spaceship-123' 
  
 // debug(process.env.GCLOUD_CREDS));
@@ -25,6 +27,7 @@ function transcribeAudioFile(filePath){
 			encoding: 'LINEAR16',
 			sampleRate: 16000
 			}, function(err, transcript) {
+				
 				debug(err);
 
 				if(err){
@@ -32,6 +35,8 @@ function transcribeAudioFile(filePath){
 				} else {
 					resolve(transcript);
 				}
+
+				cleanFile(filePath);
 
 			}
 		);

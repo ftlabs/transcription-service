@@ -5,6 +5,7 @@ const ffmpeg = require('ffmpeg-static');
 const shortID = require('shortid').generate;
 const fileInfo = require('file-type');
 
+const cleanFile = require('./clean-file');
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
 module.exports = function(sourceFilePath){
@@ -60,6 +61,8 @@ module.exports = function(sourceFilePath){
 									debug('FFMPEG closed and was happy');
 									resolve(outputDestination);
 								}
+
+								cleanFile(sourceFilePath);								
 
 							});
 
