@@ -11,6 +11,7 @@ const splitAudio = require('../bin/lib/split-audio');
 const transcribeAudio = require('../bin/lib/transcribe-audio');
 const cleanUp = require('../bin/lib/clean-up');
 const getTimeIndexes = require('../bin/lib/generate-time-indexes');
+const generateVTT = require('../bin/lib/generate-vtt-file');
 
 function prepareAudio(filePath, jobID){
 
@@ -96,7 +97,28 @@ router.post('/transcribe', function(req, res) {
 		})
 		.then(transcriptions => {
 			debug(transcriptions);
-			res.json(transcriptions);
+
+			if(req.query.output === undefined){
+				res.json(transcriptions);
+			} else if(req.query.output === "vtt"){
+				generateVTT(transcriptions)
+					.then(VTT => {
+						res.type('text/vtt');
+						res.send(VTT);
+					})
+					.catch(err => {
+						res.status(err.status || 500);
+						res.json({
+							status : 'error',
+							message : err.message || 'An error occurred as we tried to generate a VTT file. Results return as JSON',
+							data : transcriptions
+						});
+					})
+				;
+			} else {
+
+			}
+			
 			cleanUp(jobID);
 		})
 		.catch(err => {
