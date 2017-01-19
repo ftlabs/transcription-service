@@ -7,12 +7,12 @@ const shortID = require('shortid').generate;
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
 // ffmpeg -i somefile.mp3 -f segment -segment_time 3 -c copy out%03d.mp3
-module.exports = function(sourceFilePath){
+module.exports = function(sourceFilePath, jobID){
 
 	return new Promise( (resolve, reject) => {
 
-		const jobID = shortID();
-		const splitFilesDestination = `${tmpPath}/${jobID}/`;
+		// const jobID = shortID();
+		const splitFilesDestination = `${tmpPath}/__${jobID}`;
 
 		fs.mkdir(splitFilesDestination, function(err){
 
@@ -27,7 +27,7 @@ module.exports = function(sourceFilePath){
 				'3',
 				'-c',
 				'copy',
-				`${tmpPath}/${jobID}/out%03d.wav`
+				`${splitFilesDestination}/out%03d.wav`
 			];
 			debug(`Splitting files in ${tmpPath}/${jobID}/`);
 			const process = spawn(ffmpeg.path, args);
@@ -51,7 +51,7 @@ module.exports = function(sourceFilePath){
 						if(err){
 							reject(err);
 						} else {
-							resolve(files.map(f => {return `${splitFilesDestination}${f}`;}));
+							resolve(files.map(f => {return `${splitFilesDestination}/${f}`;}));
 						}
 					})
 				}
