@@ -1,11 +1,7 @@
 const debug = require('debug')('bin:lib:transcribe-audio');
 const fs = require('fs');
 
-// const cleanFile = require('./clean-file');
-
-const projectId = process.env.GCLOUD_PROJECT; // E.g. 'grape-spaceship-123' 
- 
-// debug(process.env.GCLOUD_CREDS));
+const projectId = process.env.GCLOUD_PROJECT;
 
 const gcloud = require('google-cloud')({
 	projectId: projectId,
@@ -28,15 +24,11 @@ function transcribeAudioFile(filePath){
 			sampleRate: 16000
 			}, function(err, transcript) {
 				
-				// debug(err);
-
 				if(err){
 					reject(err);
 				} else {
 					resolve(transcript);
 				}
-
-				// cleanFile(filePath);
 
 			}
 		);
@@ -47,7 +39,9 @@ function transcribeAudioFile(filePath){
 }
 
 module.exports = function(audioFiles){
+
 	debug("audioFiles", audioFiles);
+	
 	return Promise.all( audioFiles.map(file => { return transcribeAudioFile(file) } ) )
 		.catch(err => {
 			debug(err);

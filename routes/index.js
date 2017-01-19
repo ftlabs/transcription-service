@@ -10,6 +10,7 @@ const extractAudio = require('../bin/lib/extract-audio');
 const splitAudio = require('../bin/lib/split-audio');
 const transcribeAudio = require('../bin/lib/transcribe-audio');
 const cleanUp = require('../bin/lib/clean-up');
+const getTimeIndexes = require('../bin/lib/generate-time-indexes');
 
 function prepareAudio(filePath, jobID){
 
@@ -70,7 +71,29 @@ router.post('/transcribe', function(req, res) {
 
 	receiveFile(req)
 		.then(file => prepareAudio(file, jobID))
-		.then(files => transcribeAudio(files, jobID))
+		.then(files => {
+			return getTimeIndexes(files)
+				.then(durations => {
+					return {
+						files,
+						durations
+					};
+				})
+			;
+
+		})
+		.then(data => {
+			return transcribeAudio(data.files, jobID)
+				.then(transcriptions => {
+					return transcriptions.map( (t, idx) => {
+						return {
+							transcription : t,
+							timeOffsets : data.durations[idx]
+						};
+					});
+				})
+			;
+		})
 		.then(transcriptions => {
 			debug(transcriptions);
 			res.json(transcriptions);
@@ -86,8 +109,6 @@ router.post('/transcribe', function(req, res) {
 			cleanUp(jobID);
 		})
 	;
-
-	// res.end();
 
 });
 
