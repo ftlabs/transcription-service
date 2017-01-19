@@ -26,19 +26,23 @@ router.get('/', function(req, res) {
 router.get('/transcribe', function(req, res){
 
 	if(req.query.resource){
-		
-		debug(req.query.resource);
 
 		absorbFile(req.query.resource)
 			.then(file => prepareAudio(file))
 			.then(files => transcribeAudio(files))
 			.then(transcriptions => {
 				debug(transcriptions);
+				res.json(transcriptions);
 			})
-			.catch(err => debug(err))
+			.catch(err => {
+				debug(err);
+				res.status(err.status || 500);
+				res.json({
+					status : 'error',
+					message : err.message || 'An error occurred as we tried to transcribe your file'
+				});
+			});
 		;
-
-		res.end();
 
 	} else {
 
@@ -52,20 +56,28 @@ router.get('/transcribe', function(req, res){
 
 });
 
-router.post('/transcribe', function(req, res) {
+router.post('/transcribe', function(req, res, next) {
+
+	debug(req.body);
 
 	receiveFile(req)
 		.then(file => prepareAudio(file))
 		.then(files => transcribeAudio(files))
 		.then(transcriptions => {
 			debug(transcriptions);
+			res.json(transcriptions);
 		})
 		.catch(err => {
 			debug(err);
+			res.status(err.status || 500);
+			res.json({
+				status : 'error',
+				message : err.message || 'An error occurred as we tried to transcribe your file'
+			});
 		})
 	;
 
-	res.end();
+	// res.end();
 
 });
 

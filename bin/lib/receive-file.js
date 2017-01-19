@@ -26,29 +26,33 @@ module.exports = function(req){
 					reject({
 						message : 'Invalid filetype'
 					});
-					fs.unlink(destination);
 					return;
 				} else {
 					fileStream = fs.createWriteStream(`${destination}`);
 					fileStream.setDefaultEncoding('binary');
 					fileStream.write(data);
+					requestSize += data.length;
 				}
 
 			} else {
 				fileStream.write(data);
 			}
 
-			requestSize += data.length;
 			debug(`Got ${data.length} bytes. Total: ${requestSize}`);
 
 		});
 
 		req.on('end', function () {
 
-			debug(`Data requestSize: ${requestSize} bytes`);
-			fileStream.end();
-			debug(`File written to: ${destination}`);
-			resolve(destination);
+			if(fileStream !== undefined){
+
+				debug(`Data requestSize: ${requestSize} bytes`);
+				fileStream.end();
+				debug(`File written to: ${destination}`);
+				resolve(destination);
+
+			}
+
 
 		});
 
@@ -60,7 +64,7 @@ module.exports = function(req){
 
 	})
 	.catch(err => {
-		fs.unlink(destination);
+		fs.unlink(destination, (err) => debug(err));
 		throw err;
 	});
 

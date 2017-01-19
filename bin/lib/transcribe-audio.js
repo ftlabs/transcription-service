@@ -46,7 +46,7 @@ module.exports = function(audioFiles){
 	return Promise.all( audioFiles.map(file => { return transcribeAudioFile(file) } ) )
 		.catch(err => {
 			debug(err);
-			throw err;
+			throw Error('An error occurred in the transcription process');
 		})
 	;
 
