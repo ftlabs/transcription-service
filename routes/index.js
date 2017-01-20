@@ -98,11 +98,8 @@ router.get('/transcribe', function(req, res){
 
 router.use(limitRequestSize);
 router.post('/transcribe', function(req, res) {
-
 	debug(req.body);
 	receiveFile(req).then(file => generateTranscriptions(file, req, res));
-
 });
-
 
 module.exports = router;

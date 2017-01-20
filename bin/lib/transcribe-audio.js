@@ -15,7 +15,9 @@ const speechClient = speech({
 	credentials: JSON.parse(process.env.GCLOUD_CREDS)
 });
 
-function transcribeAudioFile(filePath){
+const wait = (time) => {return new Promise( resolve => { setTimeout(resolve, time) } ) };
+
+function transcribeAudioFile(filePath, attempt = 0){
 
 	return new Promise( (resolve, reject) => {
 
@@ -25,7 +27,28 @@ function transcribeAudioFile(filePath){
 			}, function(err, transcript) {
 				
 				if(err){
-					reject(err);
+
+					if(err.description === 'Secure read failed'){
+						if(attempt < 3){
+
+							wait(800 * (attempt + 1))
+								.then(function(){
+									transcribeAudioFile(filePath, attempt += 1)
+										.then(transcription => {
+											resolve(transcription);
+										})
+									;
+								})
+							;
+
+						} else {
+							reject(err);
+						}
+
+					} else {
+						reject(err);
+					}
+
 				} else {
 					resolve(transcript);
 				}
