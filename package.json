@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "aws-sdk": "^2.7.26",
     "body-parser": "~1.15.1",
     "cookie-parser": "~1.4.3",
     "debug": "^2.2.0",
@@ -19,6 +20,7 @@
     "node-fetch": "^1.6.3",
     "node-ffprobe": "^1.2.2",
     "rimraf": "^2.5.4",
+    "s3o-middleware": "^1.8.0",
     "serve-favicon": "~2.3.0",
     "shortid": "^2.2.6"
   },
