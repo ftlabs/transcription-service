@@ -1,5 +1,6 @@
 const debug = require('debug')('./generate-time-indexes');
 const ffprobe = require('node-ffprobe');
+process.env.FFPROBE_PATH = require('ffprobe-static').path;
 
 module.exports = function(audioFiles){
 
