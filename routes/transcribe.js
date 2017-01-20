@@ -80,13 +80,9 @@ function generateTranscriptions(audioFile, req, res){
 	;
 }
 
-router.get('/', function(req, res) {
-  res.end();
-});
-
 router.use(requireToken);
 
-router.get('/transcribe', function(req, res){
+router.get('/',function(req, res){
 
 	if(req.query.resource){
 		absorbFile(req.query.resource).then(file => generateTranscriptions(file, req, res));
@@ -101,7 +97,7 @@ router.get('/transcribe', function(req, res){
 });
 
 router.use(limitRequestSize);
-router.post('/transcribe', function(req, res) {
+router.post('/', function(req, res) {
 	debug(req.body);
 	receiveFile(req).then(file => generateTranscriptions(file, req, res));
 });
