@@ -21,57 +21,11 @@ function prepareAudio(filePath, jobID){
 
 }
 
-router.use(limitRequestSize);
-
-router.get('/', function(req, res) {
-  res.end();
-});
-
-router.get('/transcribe', function(req, res){
-
-	if(req.query.resource){
-
-		const jobID = shortID();
-		
-		absorbFile(req.query.resource)
-			.then(file => prepareAudio(file))
-			.then(files => transcribeAudio(files))
-			.then(transcriptions => {
-				debug(transcriptions);
-				res.json(transcriptions);
-				cleanUp(jobID);
-			})
-			.catch(err => {
-				debug(err);
-				res.status(err.status || 500);
-				res.json({
-					status : 'error',
-					message : err.message || 'An error occurred as we tried to transcribe your file'
-				});
-				cleanUp(jobID);
-			});
-		;
-
-	} else {
-
-		res.status(422);
-		res.json({
-			status : `error`,
-			message : `You must pass a URL with the 'resource' query parameter pointing to the media file you wish to have transcribed.`
-		});
-	
-	}
-
-});
-
-router.post('/transcribe', function(req, res) {
-
-	debug(req.body);
+function generateTranscriptions(audioFile, req, res){
 
 	const jobID = shortID();
 
-	receiveFile(req)
-		.then(file => prepareAudio(file, jobID))
+	return prepareAudio(audioFile, jobID)
 		.then(files => {
 			return getTimeIndexes(files)
 				.then(durations => {
@@ -116,21 +70,37 @@ router.post('/transcribe', function(req, res) {
 					})
 				;
 			} else {
-
+				res.json(transcriptions);				
 			}
 			
 			cleanUp(jobID);
 		})
-		.catch(err => {
-			debug(err);
-			res.status(err.status || 500);
-			res.json({
-				status : 'error',
-				message : err.message || 'An error occurred as we tried to transcribe your file'
-			});
-			cleanUp(jobID);
-		})
 	;
+}
+
+router.get('/', function(req, res) {
+  res.end();
+});
+
+router.get('/transcribe', function(req, res){
+
+	if(req.query.resource){
+		absorbFile(req.query.resource).then(file => generateTranscriptions(file, req, res));
+	} else {
+		res.status(422);
+		res.json({
+			status : `error`,
+			message : `You must pass a URL with the 'resource' query parameter pointing to the media file you wish to have transcribed.`
+		});
+	}
+
+});
+
+router.use(limitRequestSize);
+router.post('/transcribe', function(req, res) {
+
+	debug(req.body);
+	receiveFile(req).then(file => generateTranscriptions(file, req, res));
 
 });
 

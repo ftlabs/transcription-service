@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const validFile = require('./valid-file');
 
-// 40 Megabytes
+// Default 40 megabytes
 const MAX_FILE_SIZE = Number( process.env.MAX_FILE_SIZE ) || 41943040;
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
