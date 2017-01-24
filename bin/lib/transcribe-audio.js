@@ -12,7 +12,8 @@ const speech = gcloud.speech;
 
 const speechClient = speech({
 	projectId,
-	credentials: JSON.parse(process.env.GCLOUD_CREDS)
+	credentials: JSON.parse(process.env.GCLOUD_CREDS),
+	langageCode : 'en-GB'
 });
 
 const wait = (time) => {return new Promise( resolve => { setTimeout(resolve, time) } ) };

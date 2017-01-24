@@ -14,6 +14,7 @@ const transcribeAudio = require('../bin/lib/transcribe-audio');
 const cleanUp = require('../bin/lib/clean-up');
 const getTimeIndexes = require('../bin/lib/generate-time-indexes');
 const generateVTT = require('../bin/lib/generate-vtt-file');
+const alignTranscriptions = require('../bin/lib/align-transcriptions');
 
 function prepareAudio(filePath, jobID){
 
@@ -66,6 +67,8 @@ function generateTranscriptions(audioFile, req, res){
 		.then(transcriptions => {
 			debug(transcriptions);
 
+			alignTranscriptions(transcriptions.transcribedChunks, transcriptions.whole[0]);
+
 			if(req.query.output === undefined){
 				res.json(transcriptions.transcribedChunks);
 			} else if(req.query.output === "vtt"){
@@ -89,8 +92,15 @@ function generateTranscriptions(audioFile, req, res){
 			
 			cleanUp(jobID);
 		})
+		.catch(err => {
+			res.status(500);
+			res.json({
+				status : 'err',
+				message : 'An error occurred whilst we transcribed your audio'
+			})
+		})
 	;
-	
+
 }
 
 router.use(requireToken);
