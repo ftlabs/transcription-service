@@ -38,7 +38,7 @@ function convertSecondsToTimestamp(seconds){
 	const Minutes = padNumber(m);
 	const Seconds = padNumber(s);
 
-	return `${Hours}:${Minutes}:${Seconds}`;
+	return `${Hours}:${Minutes}:${Seconds}.000`;
 
 };
 
