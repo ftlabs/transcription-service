@@ -27,7 +27,7 @@ function generateTranscriptions(audioFile, req, res){
 
 	const jobID = shortID();
 
-	return prepareAudio(audioFile, jobID)
+	const transcribeInParts = prepareAudio(audioFile, jobID)
 		.then(files => {
 			return getTimeIndexes(files)
 				.then(durations => {
@@ -50,14 +50,26 @@ function generateTranscriptions(audioFile, req, res){
 					});
 				})
 			;
+		});
+
+	const transcribeAsWhole = extractAudio(audioFile, jobID)
+		.then(audio => transcribeAudio(audio))
+	;
+
+	return Promise.all([transcribeInParts, transcribeAsWhole])
+		.then(transciptions => {
+			return {
+				transcribedChunks : transciptions[0],
+				whole : transciptions[1]
+			};
 		})
 		.then(transcriptions => {
 			debug(transcriptions);
 
 			if(req.query.output === undefined){
-				res.json(transcriptions);
+				res.json(transcriptions.transcribedChunks);
 			} else if(req.query.output === "vtt"){
-				generateVTT(transcriptions)
+				generateVTT(transcriptions.transcribedChunks)
 					.then(VTT => {
 						res.type('text/vtt');
 						res.send(VTT);
@@ -67,17 +79,18 @@ function generateTranscriptions(audioFile, req, res){
 						res.json({
 							status : 'error',
 							message : err.message || 'An error occurred as we tried to generate a VTT file. Results return as JSON',
-							data : transcriptions
+							data : transcriptions.transcribedChunks
 						});
 					})
 				;
 			} else {
-				res.json(transcriptions);				
+				res.json(transcriptions.transcribedChunks);				
 			}
 			
 			cleanUp(jobID);
 		})
 	;
+	
 }
 
 router.use(requireToken);

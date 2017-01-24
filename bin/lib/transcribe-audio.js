@@ -64,6 +64,10 @@ function transcribeAudioFile(filePath, attempt = 0){
 module.exports = function(audioFiles){
 
 	debug("audioFiles", audioFiles);
+
+	if(audioFiles.constructor !== Array){
+		audioFiles = [audioFiles];
+	}
 	
 	return Promise.all( audioFiles.map(file => { return transcribeAudioFile(file) } ) )
 		.catch(err => {
