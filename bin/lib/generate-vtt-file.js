@@ -11,13 +11,34 @@ A U+002E FULL STOP character (.).
 Three ASCII digits, representing the thousandths of a second seconds-frac as a base ten integer.
 */
 
+const debug = require('debug')('bin:lib:generate-vtt-file');
+
+function padNumber(num){
+	
+	if(num === 0){
+		num = '00';
+	} else if(num < 10){
+		num = `0${num}`;
+	} else {
+		num = num;
+	}
+
+	return num;
+
+}
+
 function convertSecondsToTimestamp(seconds){
 
-	d = Number(seconds);
-	var h = Math.floor(d / 3600);
-	var m = Math.floor(d % 3600 / 60);
-	var s = Math.floor(d % 3600 % 60);
-	return ((h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s);
+	const d = Number(seconds);
+	const h = Math.floor(d / 3600);
+	const m = Math.floor(d % 3600 / 60);
+	const s = Math.floor(d % 3600 % 60);
+
+	const Hours = padNumber(h);
+	const Minutes = padNumber(m);
+	const Seconds = padNumber(s);
+
+	return `${Hours}:${Minutes}:${Seconds}`;
 
 };
 
@@ -25,14 +46,10 @@ module.exports = function(transcriptions){
 
 	let VTT = 'WEBVTT\n\n';
 
-	transcriptions.forEach(t => {
-		console.log(convertSecondsToTimestamp(t.timeOffsets.start) + " --> " + convertSecondsToTimestamp(t.timeOffsets.end));
-		VTT += convertSecondsToTimestamp(t.timeOffsets.start) + " --> " + convertSecondsToTimestamp(t.timeOffsets.end) + "\n" + t.transcription + "\n\n";
-
-		/*VTT += `${convertSecondsToTimestamp(t.timeOffsets.start)} --> ${convertSecondsToTimestamp(t.timeOffsets.end)}
-${t.transcription}
-
-		`;*/
+	transcriptions.forEach( (t, idx) => {
+		const VTTContent = (idx + 1) + "\n" + convertSecondsToTimestamp(t.timeOffsets.start) + " --> " + convertSecondsToTimestamp(t.timeOffsets.end) + "\n" + t.transcription + "\n\n";
+		debug(VTTContent);
+		VTT += VTTContent;
 	});
 
 	return Promise.resolve(VTT);
