@@ -40,7 +40,7 @@ function generateTranscriptions(audioFile, req, res){
 
 		})
 		.then(data => {
-			return transcribeAudio(data.files, jobID)
+			return transcribeAudio(data.files)
 				.then(transcriptions => {
 					return transcriptions.map( (t, idx) => {
 						return {
