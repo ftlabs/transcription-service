@@ -3,8 +3,6 @@ const phonemes = require('./phonemes');
 const levenshtein = require('levenshtein');
 
 /*
-
-
 { transcribedChunks: 
  [ { transcription: 'when the bank of England announced',
      timeOffsets: [Object] },
@@ -45,6 +43,8 @@ module.exports = function(parts, whole){
 	const partsSounds = parts.map(p => {
 		return phonemes.convert(p.transcription);
 	});
+	
+	const distances = [];
 
 	const bestMatches = partsSounds.map(part => {
 
@@ -55,7 +55,7 @@ module.exports = function(parts, whole){
 
 			const section = wholeSounds.slice(idx, idx + part.length);
 			const distance = levenshtein(section, part);
-			// debug('DISTANCE', distance);
+
 			if( distance < bestMatch ){
 				bestMatchOffset = idx;
 				bestMatch = distance;
@@ -63,16 +63,16 @@ module.exports = function(parts, whole){
 
 		}
 		debug('Best Match:', part, wholeSounds.slice(bestMatch, bestMatch + part.length), bestMatch);
+		distances.push(bestMatch);
 		return bestMatchOffset;
 
 	});
 
 	const pairs = partsSounds.map( (p, idx) => {
-		// debug(wholeSounds.slice(bestMatches[idx], bestMatches[idx] + p.length));
 		return {
 			part : p,
 			match : wholeSounds.slice(bestMatches[idx], bestMatches[idx] + p.length),
-			distance : bestMatches[idx]
+			distance : distances[idx]
 		}
 	});
 

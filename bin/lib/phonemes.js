@@ -12,7 +12,20 @@ fs.readFileSync(`${__dirname}/../cmudict-0.7b.txt`, 'utf8').split('\n').forEach(
 	const value = parts.join('').replace(/ /g , '').replace(/[0-9]/g, '');
 
 	phonemes[key] = value;
-	lookup[value.toLowerCase()] = key;
+
+	const lKey = value.toLowerCase();
+
+	if(lookup[lKey] !== undefined){
+		if(lookup[lKey].constructor !== Array){
+			lookup[lKey] = [lookup[lKey]];
+			lookup[lKey].push(key);			
+		} else {
+			lookup[lKey].push(key);
+		}
+	} else {
+		lookup[value.toLowerCase()] = key;
+	}
+
 
 });
 
@@ -21,7 +34,7 @@ debug('Phonemes dataset loaded');
 
 function removePunctuation(s){
 
-	return s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+	return s.replace(/[.,\/#!$%\^&\*;:'{}=\-_`~()]/g, '');
 
 }
 
@@ -47,8 +60,9 @@ function convertPhonemesToString(phonemes){
 		phoneme = removePunctuation( phoneme.toLowerCase() );
 		debug(phoneme);
 		if(lookup[phoneme] !== undefined){
-			debug(">>>", lookup[phoneme], phoneme);
-			return lookup[phoneme];
+			const selectedWord = lookup[phoneme].constructor === Array ? lookup[phoneme][0] : lookup[phoneme]
+			debug(">>>", selectedWord, phoneme);
+			return selectedWord;
 		} else {
 			return phoneme;
 		}
