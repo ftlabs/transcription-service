@@ -30,7 +30,7 @@ function generateTranscriptions(audioFile, req, res){
 	extractAudio(audioFile, jobID)
 		.then(audio => transcribeAudio(audio))
 		.then(transcription => {
-			
+			debug('\n\n\n\n\n', transcription);
 			return prepareAudio(audioFile, jobID)
 				.then(files => {
 					return getTimeIndexes(files)
@@ -44,6 +44,7 @@ function generateTranscriptions(audioFile, req, res){
 
 				})
 				.then(data => {
+					debug('+++++++ ', transcription);
 					return transcribeAudio(data.files, transcription)
 						.then(transcriptions => {
 							return transcriptions.map( (t, idx) => {
