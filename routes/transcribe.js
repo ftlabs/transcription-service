@@ -27,41 +27,42 @@ function generateTranscriptions(audioFile, req, res){
 
 	const jobID = shortID();
 
-	const transcribeInParts = prepareAudio(audioFile, jobID)
-		.then(files => {
-			return getTimeIndexes(files)
-				.then(durations => {
-					return {
-						files,
-						durations
-					};
-				})
-			;
-
-		})
-		.then(data => {
-			return transcribeAudio(data.files)
-				.then(transcriptions => {
-					return transcriptions.map( (t, idx) => {
-						return {
-							transcription : t,
-							timeOffsets : data.durations[idx]
-						};
-					});
-				})
-			;
-		});
-
-	const transcribeAsWhole = extractAudio(audioFile, jobID)
+	extractAudio(audioFile, jobID)
 		.then(audio => transcribeAudio(audio))
-	;
+		.then(transcription => {
+			
+			return prepareAudio(audioFile, jobID)
+				.then(files => {
+					return getTimeIndexes(files)
+						.then(durations => {
+							return {
+								files,
+								durations
+							};
+						})
+					;
 
-	return Promise.all([transcribeInParts, transcribeAsWhole])
-		.then(transciptions => {
-			return {
-				transcribedChunks : transciptions[0],
-				whole : transciptions[1]
-			};
+				})
+				.then(data => {
+					return transcribeAudio(data.files, transcription)
+						.then(transcriptions => {
+							return transcriptions.map( (t, idx) => {
+								return {
+									transcription : t,
+									timeOffsets : data.durations[idx]
+								};
+							});
+						})
+						.then(transcribedChunks => {
+							return {
+								whole : transcription,
+								transcribedChunks
+							};
+						})
+					;
+				})
+			;
+
 		})
 		.then(transcriptions => {
 			debug(transcriptions);
@@ -87,7 +88,16 @@ function generateTranscriptions(audioFile, req, res){
 				res.json(transcriptions.transcribedChunks);				
 			}
 			
-			cleanUp(jobID);
+			// cleanUp(jobID);
+		})
+		.catch(err => {
+			debug(err);
+			// cleanUp(jobID);			
+			res.status(500);
+			res.json({
+				status : 'error',
+				message : 'An error occurred as we tried to generate the transcription for this media.'
+			});
 		})
 	;
 	

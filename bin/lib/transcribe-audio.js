@@ -12,12 +12,13 @@ const Speech = gcloud.speech;
 
 const speech = new Speech({
 	projectId,
-	credentials: JSON.parse(process.env.GCLOUD_CREDS)
+	credentials: JSON.parse(process.env.GCLOUD_CREDS),
+	deadline : 50000
 });
 
 const wait = (time) => {return new Promise( resolve => { setTimeout(resolve, time) } ) };
 
-function splitPhrases(phrase, chunkSize = 100, respectSpaces = true){
+function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 
 	const words = phrase.split(' ');
 
