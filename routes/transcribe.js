@@ -15,79 +15,103 @@ const cleanUp = require('../bin/lib/clean-up');
 const getTimeIndexes = require('../bin/lib/generate-time-indexes');
 const generateVTT = require('../bin/lib/generate-vtt-file');
 
-function prepareAudio(filePath, jobID){
+function prepareAudio(filePath, jobID, duration){
 
 	return extractAudio(filePath, jobID)
-		.then(file => splitAudio(file, jobID))
+		.then(file => splitAudio(file, jobID, duration))
 	;
 
 }
 
 function generateTranscriptions(audioFile, req, res){
 
+	console.time('entire-process');
 	const jobID = shortID();
 
-	const transcribeInParts = prepareAudio(audioFile, jobID)
-		.then(files => {
-			return getTimeIndexes(files)
-				.then(durations => {
-					return {
-						files,
-						durations
-					};
-				})
-			;
-
-		})
-		.then(data => {
-			return transcribeAudio(data.files, jobID)
-				.then(transcriptions => {
-					return transcriptions.map( (t, idx) => {
-						return {
-							transcription : t,
-							timeOffsets : data.durations[idx]
-						};
-					});
-				})
-			;
-		});
-
-	const transcribeAsWhole = extractAudio(audioFile, jobID)
+	// Convert the audio to .wav format
+	prepareAudio(audioFile, jobID, 55) 
+		// Get a transcription of the whole audio to serve as a guide for the chunks
 		.then(audio => transcribeAudio(audio))
-	;
+		.then(transcriptions => {
+			debug('Whole transcriptions:', transcriptions);
+			transcriptions = transcriptions.join(' ');
 
-	return Promise.all([transcribeInParts, transcribeAsWhole])
-		.then(transciptions => {
-			return {
-				transcribedChunks : transciptions[0],
-				whole : transciptions[1]
-			};
+			// Split the audio file into 3 second chunks for time-based transcriptions
+			return prepareAudio(audioFile, jobID)
+				.then(files => {
+					// Get the time indexes + offsets for each audio chunk
+					return getTimeIndexes(files)
+						.then(durations => {
+							return {
+								files,
+								durations
+							};
+						})
+					;
+
+				})
+				.then(data => {
+					// Transcribe all of the smaller audio chunks
+					return transcribeAudio(data.files, transcriptions)
+						.then(transcriptions => {
+							// Link up the small audio transcriptions with the 
+							// time indexes of each file
+							return transcriptions.map( (t, idx) => {
+								return {
+									transcription : t,
+									timeOffsets : data.durations[idx]
+								};
+							});
+						})
+						.then(transcribedChunks => { 
+							return {
+								whole : transcriptions,
+								transcribedChunks
+							};
+						})
+					;
+				})
+			;
+
 		})
 		.then(transcriptions => {
 			debug(transcriptions);
-
+			console.time('entire-process');
 			if(req.query.output === undefined){
 				res.json(transcriptions.transcribedChunks);
 			} else if(req.query.output === "vtt"){
+				// If a VTT has been requested, output a VTT file
 				generateVTT(transcriptions.transcribedChunks)
 					.then(VTT => {
 						res.type('text/vtt');
 						res.send(VTT);
 					})
 					.catch(err => {
+						debug(err);
 						res.status(err.status || 500);
 						res.json({
 							status : 'error',
-							message : err.message || 'An error occurred as we tried to generate a VTT file. Results return as JSON',
+							message : 'An error occurred as we tried to generate a VTT file. Results return as JSON',
 							data : transcriptions.transcribedChunks
 						});
 					})
 				;
 			} else {
+				// Otherwise, just send the transcribed chunks.
 				res.json(transcriptions.transcribedChunks);				
 			}
 			
 			cleanUp(jobID);
+		})
+		.catch(err => {
+			console.time('entire-process');
+			debug(err);
+			cleanUp(jobID);
+			res.status(500);
+			res.json({
+				status : 'error',
+				message : 'An error occurred as we tried to generate the transcription for this media.'
+			});
 		})
 	;
 	

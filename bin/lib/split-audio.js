@@ -7,7 +7,7 @@ const shortID = require('shortid').generate;
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
 // ffmpeg -i somefile.mp3 -f segment -segment_time 3 -c copy out%03d.mp3
-module.exports = function(sourceFilePath, jobID){
+module.exports = function(sourceFilePath, jobID, duration = 3){
 
 	return new Promise( (resolve, reject) => {
 
@@ -24,7 +24,7 @@ module.exports = function(sourceFilePath, jobID){
 				'-f',
 				'segment',
 				'-segment_time',
-				'3',
+				duration,
 				'-c',
 				'copy',
 				`${splitFilesDestination}/out%03d.wav`
@@ -33,7 +33,9 @@ module.exports = function(sourceFilePath, jobID){
 			const process = spawn(ffmpeg.path, args);
 			
 			process.stdout.on('data', (data) => {
-				debug(`stdout: ${data}`);
+				if(process.env.VERBOSE_FFMPEG){
+					debug(`stdout: ${data}`);
+				}
 			});
 
 			process.stderr.on('data', (data) => {
