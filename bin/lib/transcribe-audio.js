@@ -66,7 +66,13 @@ function transcribeAudio(audioFile, phrase = ''){
 					reject(err);
 				} else {
 					debug('Transcription result', result);
-					resolve(result[0].transcript);
+
+					if(result[0] === undefined){
+						resolve('');
+					} else {
+						resolve(result[0].transcript);
+					}
+
 				}
 
 			}
