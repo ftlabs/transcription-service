@@ -17,6 +17,7 @@
     "file-type": "^4.0.0",
     "google-cloud": "^0.45.2",
     "hbs": "~4.0.0",
+    "lru-cache": "^4.0.2",
     "morgan": "~1.7.0",
     "node-fetch": "^1.6.3",
     "node-ffprobe": "git://github.com/seanmtracey/node-ffprobe.git",

@@ -13,7 +13,7 @@ const splitAudio = require('../bin/lib/split-audio');
 const transcribeAudio = require('../bin/lib/transcribe-audio');
 const cleanUp = require('../bin/lib/clean-up');
 const getTimeIndexes = require('../bin/lib/generate-time-indexes');
-const generateVTT = require('../bin/lib/generate-vtt-file');
+const jobs = require('../bin/lib/jobs');
 
 function prepareAudio(filePath, jobID, duration){
 
@@ -25,8 +25,14 @@ function prepareAudio(filePath, jobID, duration){
 
 function generateTranscriptions(audioFile, req, res){
 
-	console.time('entire-process');
 	const jobID = shortID();
+	
+	jobs.create(jobID);
+
+	res.json({
+		status : 'ok',
+		message : `Job created. Please check http://localhost:3000/get/${jobID} to get status/transcription.`
+	})
 
 	// Convert the audio to .wav format
 	prepareAudio(audioFile, jobID, 55) 
@@ -34,7 +40,12 @@ function generateTranscriptions(audioFile, req, res){
 		.then(audio => transcribeAudio(audio))
 		.then(transcriptions => {
 			debug('Whole transcriptions:', transcriptions);
-			transcriptions = transcriptions.join(' ');
+
+			if(transcriptions.length > 1){
+				transcriptions = transcriptions.join(' ');
+			} else {
+				transcriptions = transcriptions[0];
+			}
 
 			// Split the audio file into 3 second chunks for time-based transcriptions
 			return prepareAudio(audioFile, jobID)
@@ -75,43 +86,15 @@ function generateTranscriptions(audioFile, req, res){
 
 		})
 		.then(transcriptions => {
-			debug(transcriptions);
-			console.time('entire-process');
-			if(req.query.output === undefined){
-				res.json(transcriptions.transcribedChunks);
-			} else if(req.query.output === "vtt"){
-				// If a VTT has been requested, output a VTT file
-				generateVTT(transcriptions.transcribedChunks)
-					.then(VTT => {
-						res.type('text/vtt');
-						res.send(VTT);
-					})
-					.catch(err => {
-						debug(err);
-						res.status(err.status || 500);
-						res.json({
-							status : 'error',
-							message : 'An error occurred as we tried to generate a VTT file. Results return as JSON',
-							data : transcriptions.transcribedChunks
-						});
-					})
-				;
-			} else {
-				// Otherwise, just send the transcribed chunks.
-				res.json(transcriptions.transcribedChunks);				
-			}
-			
+
+			jobs.complete(jobID, transcriptions);
 			cleanUp(jobID);
+			
 		})
 		.catch(err => {
-			console.time('entire-process');
 			debug(err);
 			cleanUp(jobID);
-			res.status(500);
-			res.json({
-				status : 'error',
-				message : 'An error occurred as we tried to generate the transcription for this media.'
-			});
+			jobs.failed(jobID);
 		})
 	;
 	
