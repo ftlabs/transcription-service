@@ -15,24 +15,27 @@ const cleanUp = require('../bin/lib/clean-up');
 const getTimeIndexes = require('../bin/lib/generate-time-indexes');
 const generateVTT = require('../bin/lib/generate-vtt-file');
 
-function prepareAudio(filePath, jobID){
+function prepareAudio(filePath, jobID, duration){
 
 	return extractAudio(filePath, jobID)
-		.then(file => splitAudio(file, jobID))
+		.then(file => splitAudio(file, jobID, duration))
 	;
 
 }
 
 function generateTranscriptions(audioFile, req, res){
 
+	console.time('entire-process');
 	const jobID = shortID();
 
 	// Convert the audio to .wav format
-	extractAudio(audioFile, jobID) 
+	prepareAudio(audioFile, jobID, 55) 
 		// Get a transcription of the whole audio to serve as a guide for the chunks
 		.then(audio => transcribeAudio(audio))
-		.then(transcription => {
-			debug('Whole transcription:', transcription);
+		.then(transcriptions => {
+			debug('Whole transcriptions:', transcriptions);
+			transcriptions = transcriptions.join(' ');
+
 			// Split the audio file into 3 second chunks for time-based transcriptions
 			return prepareAudio(audioFile, jobID)
 				.then(files => {
@@ -49,7 +52,7 @@ function generateTranscriptions(audioFile, req, res){
 				})
 				.then(data => {
 					// Transcribe all of the smaller audio chunks
-					return transcribeAudio(data.files, transcription)
+					return transcribeAudio(data.files, transcriptions)
 						.then(transcriptions => {
 							// Link up the small audio transcriptions with the 
 							// time indexes of each file
@@ -62,7 +65,7 @@ function generateTranscriptions(audioFile, req, res){
 						})
 						.then(transcribedChunks => { 
 							return {
-								whole : transcription,
+								whole : transcriptions,
 								transcribedChunks
 							};
 						})
@@ -73,7 +76,7 @@ function generateTranscriptions(audioFile, req, res){
 		})
 		.then(transcriptions => {
 			debug(transcriptions);
-
+			console.time('entire-process');
 			if(req.query.output === undefined){
 				res.json(transcriptions.transcribedChunks);
 			} else if(req.query.output === "vtt"){
@@ -101,8 +104,9 @@ function generateTranscriptions(audioFile, req, res){
 			cleanUp(jobID);
 		})
 		.catch(err => {
+			console.time('entire-process');
 			debug(err);
-			cleanUp(jobID);			
+			cleanUp(jobID);
 			res.status(500);
 			res.json({
 				status : 'error',

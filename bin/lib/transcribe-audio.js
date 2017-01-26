@@ -60,7 +60,7 @@ function transcribeAudio(audioFile, phrase = ''){
 			verbose: true
 		};
 
-		speech.asyncrecognize(audioFile, config, function(err, result) {
+		speech.recognize(audioFile, config, function(err, result) {
 				
 				if(err){
 					reject(err);
@@ -83,9 +83,10 @@ module.exports = function(audioFiles, phrase){
 	if(audioFiles.constructor !== Array){
 		audioFiles = [audioFiles];
 	}
-	
+	console.time('transcribe');
 	return Promise.all( audioFiles.map(file => { return transcribeAudio(file, phrase) } ) )
 		.then(transcriptions => {
+			console.time('transcribe');
 			if(transcriptions.length === 1){
 				return transcriptions[0];
 			} else {
