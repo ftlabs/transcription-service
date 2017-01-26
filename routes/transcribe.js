@@ -28,13 +28,28 @@ function generateTranscriptions(audioFile, req, res){
 	console.time('entire-process');
 	const jobID = shortID();
 
+	if(req.query.output === "vtt"){
+		res.writeHead(202, {'Content-Type': 'text/vtt'});
+	} else {
+		res.writeHead(202, {'Content-Type': 'application/json'});		
+	}
+
+	const onebyte = setInterval(function(){
+		debug('onebyte');
+		res.write( Buffer.from( [0x00] ) );
+	}, 3000);
+
 	// Convert the audio to .wav format
 	prepareAudio(audioFile, jobID, 55) 
 		// Get a transcription of the whole audio to serve as a guide for the chunks
 		.then(audio => transcribeAudio(audio))
 		.then(transcriptions => {
 			debug('Whole transcriptions:', transcriptions);
-			transcriptions = transcriptions.join(' ');
+			if(transcriptions.length > 1){
+				transcriptions = transcriptions.join(' ');
+			} else {
+				transcriptions = transcriptions[0];
+			}
 
 			// Split the audio file into 3 second chunks for time-based transcriptions
 			return prepareAudio(audioFile, jobID)
@@ -77,28 +92,36 @@ function generateTranscriptions(audioFile, req, res){
 		.then(transcriptions => {
 			debug(transcriptions);
 			console.time('entire-process');
+
+			clearInterval(onebyte);
+
 			if(req.query.output === undefined){
-				res.json(transcriptions.transcribedChunks);
+				res.write(JSON.stringify(transcriptions.transcribedChunks));
+				res.end();
 			} else if(req.query.output === "vtt"){
 				// If a VTT has been requested, output a VTT file
 				generateVTT(transcriptions.transcribedChunks)
 					.then(VTT => {
-						res.type('text/vtt');
-						res.send(VTT);
+						// res.type('text/vtt');
+						res.write(VTT);
+						res.end();
 					})
 					.catch(err => {
 						debug(err);
-						res.status(err.status || 500);
-						res.json({
+						clearInterval(onebyte);
+						res.write( JSON.stringify({
 							status : 'error',
 							message : 'An error occurred as we tried to generate a VTT file. Results return as JSON',
 							data : transcriptions.transcribedChunks
-						});
+						}) );
+						res.end();
 					})
 				;
 			} else {
 				// Otherwise, just send the transcribed chunks.
-				res.json(transcriptions.transcribedChunks);				
+				// res.json(transcriptions.transcribedChunks);
+				res.write(JSON.stringify(transcriptions.transcribedChunks));
+				res.end();
 			}
 			
 			cleanUp(jobID);
@@ -106,6 +129,7 @@ function generateTranscriptions(audioFile, req, res){
 		.catch(err => {
 			console.time('entire-process');
 			debug(err);
+			clearInterval(onebyte);			
 			cleanUp(jobID);
 			res.status(500);
 			res.json({
