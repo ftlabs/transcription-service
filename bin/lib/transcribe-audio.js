@@ -1,6 +1,8 @@
 const debug = require('debug')('bin:lib:transcribe-audio');
 const fs = require('fs');
 
+const wait = require('./wait');
+
 const projectId = process.env.GCLOUD_PROJECT;
 
 const gcloud = require('google-cloud')({
@@ -12,11 +14,8 @@ const Speech = gcloud.speech;
 
 const speech = new Speech({
 	projectId,
-	credentials: JSON.parse(process.env.GCLOUD_CREDS),
-	deadline : 50000
+	credentials: JSON.parse(process.env.GCLOUD_CREDS)
 });
-
-const wait = (time) => {return new Promise( resolve => { setTimeout(resolve, time) } ) };
 
 function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 
@@ -25,7 +24,7 @@ function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 
 	const chunks = [];
 
-	let currentChunk = "";
+	let currentChunk = '';
 
 	debug(words, chunks, currentChunk);
 
@@ -61,12 +60,12 @@ function transcribeAudio(audioFile, phrase = ''){
 			verbose: true
 		};
 
-		speech.recognize(audioFile, config, function(err, result) {
+		speech.asyncrecognize(audioFile, config, function(err, result) {
 				
 				if(err){
-					reject('>>> transcribe error:', err);
+					reject(err);
 				} else {
-					debug('>>> result:', result);
+					debug('Transcription result', result);
 					resolve(result[0].transcript);
 				}
 
@@ -86,18 +85,17 @@ module.exports = function(audioFiles, phrase){
 	}
 	
 	return Promise.all( audioFiles.map(file => { return transcribeAudio(file, phrase) } ) )
-	.then(transcriptions => {
-		if(transcriptions.length === 1){
-			return transcriptions[0];
-		} else {
-			return transcriptions;
-		}
-	})
+		.then(transcriptions => {
+			if(transcriptions.length === 1){
+				return transcriptions[0];
+			} else {
+				return transcriptions;
+			}
+		})
 		.catch(err => {
-			debug(err);
+			debug('Transcription error:', err);
 			throw Error('An error occurred in the transcription process');
 		})
 	;
-
 
 };

@@ -27,12 +27,16 @@ function generateTranscriptions(audioFile, req, res){
 
 	const jobID = shortID();
 
-	extractAudio(audioFile, jobID)
+	// Convert the audio to .wav format
+	extractAudio(audioFile, jobID) 
+		// Get a transcription of the whole audio to serve as a guide for the chunks
 		.then(audio => transcribeAudio(audio))
 		.then(transcription => {
-			debug('\n\n\n\n\n', transcription);
+			debug('Whole transcription:', transcription);
+			// Split the audio file into 3 second chunks for time-based transcriptions
 			return prepareAudio(audioFile, jobID)
 				.then(files => {
+					// Get the time indexes + offsets for each audio chunk
 					return getTimeIndexes(files)
 						.then(durations => {
 							return {
@@ -44,9 +48,11 @@ function generateTranscriptions(audioFile, req, res){
 
 				})
 				.then(data => {
-					debug('+++++++ ', transcription);
+					// Transcribe all of the smaller audio chunks
 					return transcribeAudio(data.files, transcription)
 						.then(transcriptions => {
+							// Link up the small audio transcriptions with the 
+							// time indexes of each file
 							return transcriptions.map( (t, idx) => {
 								return {
 									transcription : t,
@@ -54,7 +60,7 @@ function generateTranscriptions(audioFile, req, res){
 								};
 							});
 						})
-						.then(transcribedChunks => {
+						.then(transcribedChunks => { 
 							return {
 								whole : transcription,
 								transcribedChunks
@@ -71,29 +77,32 @@ function generateTranscriptions(audioFile, req, res){
 			if(req.query.output === undefined){
 				res.json(transcriptions.transcribedChunks);
 			} else if(req.query.output === "vtt"){
+				// If a VTT has been requested, output a VTT file
 				generateVTT(transcriptions.transcribedChunks)
 					.then(VTT => {
 						res.type('text/vtt');
 						res.send(VTT);
 					})
 					.catch(err => {
+						debug(err);
 						res.status(err.status || 500);
 						res.json({
 							status : 'error',
-							message : err.message || 'An error occurred as we tried to generate a VTT file. Results return as JSON',
+							message : 'An error occurred as we tried to generate a VTT file. Results return as JSON',
 							data : transcriptions.transcribedChunks
 						});
 					})
 				;
 			} else {
+				// Otherwise, just send the transcribed chunks.
 				res.json(transcriptions.transcribedChunks);				
 			}
 			
-			// cleanUp(jobID);
+			cleanUp(jobID);
 		})
 		.catch(err => {
 			debug(err);
-			// cleanUp(jobID);			
+			cleanUp(jobID);			
 			res.status(500);
 			res.json({
 				status : 'error',

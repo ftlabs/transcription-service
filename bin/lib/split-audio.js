@@ -33,7 +33,9 @@ module.exports = function(sourceFilePath, jobID){
 			const process = spawn(ffmpeg.path, args);
 			
 			process.stdout.on('data', (data) => {
-				debug(`stdout: ${data}`);
+				if(process.env.VERBOSE_FFMPEG){
+					debug(`stdout: ${data}`);
+				}
 			});
 
 			process.stderr.on('data', (data) => {
