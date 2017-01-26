@@ -13,6 +13,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/get', require('./routes/get'));
 app.use('/transcribe', require('./routes/transcribe'));
 app.use('/token', require('./routes/token'));
 

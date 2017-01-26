@@ -19,14 +19,11 @@ const speech = new Speech({
 
 function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 
-	debug('PASSED PHRASE', phrase);
 	const words = phrase.split(' ');
 
 	const chunks = [];
 
 	let currentChunk = '';
-
-	debug(words, chunks, currentChunk);
 
 	words.forEach(word => {
 
@@ -36,8 +33,6 @@ function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 			chunks.push(currentChunk);
 			currentChunk =` ${word}`;
 		}
-		
-		debug(words, chunks, currentChunk);
 
 	});
 
@@ -48,7 +43,6 @@ function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 function transcribeAudio(audioFile, phrase = ''){
 
 	return new Promise( (resolve, reject) => {
-		debug('PROMISE PHRASES', phrase);
 		const phrases = splitPhrases(phrase);
 		const config = {
 			encoding: 'LINEAR16',
@@ -65,7 +59,6 @@ function transcribeAudio(audioFile, phrase = ''){
 				if(err){
 					reject(err);
 				} else {
-					debug('Transcription result', result);
 
 					if(result[0] === undefined){
 						resolve('');
@@ -93,11 +86,7 @@ module.exports = function(audioFiles, phrase){
 	return Promise.all( audioFiles.map(file => { return transcribeAudio(file, phrase) } ) )
 		.then(transcriptions => {
 			console.time('transcribe');
-			if(transcriptions.length === 1){
-				return transcriptions[0];
-			} else {
-				return transcriptions;
-			}
+			return transcriptions;
 		})
 		.catch(err => {
 			debug('Transcription error:', err);
