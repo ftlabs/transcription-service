@@ -6,6 +6,16 @@ const shortID = require('shortid').generate;
 
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
+function zeroPad(num){
+	if(num < 10){
+		return `00${num}`;
+	} else if(num < 100){
+		return `0${num}`;
+	} else {
+		return num;
+	}
+}
+
 function runFFmpeg(args){
 
 	debug('\n\n', args.join(' '), '\n\n');
@@ -20,7 +30,7 @@ function runFFmpeg(args){
 		});
 
 		process.stderr.on('data', (data) => {
-			debug(`stderr: ${data}`);
+			// debug(`stderr: ${data}`);
 			output += data + '\n';			
 		});
 
@@ -41,7 +51,6 @@ function runFFmpeg(args){
 
 }
 
-
 function identifyPauses(sourceFilePath){
 
 	// ffmpeg -i /Users/sean.tracey/Downloads/1214e988-b6d7-11e6-ba85-95d1533d9a62.mp3  -af silencedetect=n=-40dB:d=0.2 -f null -
@@ -52,10 +61,13 @@ function identifyPauses(sourceFilePath){
 		'silencedetect=n=-40dB:d=0.2',
 		'-f',
 		'null',
-		' -'
+		'-'
 	];
 	return runFFmpeg(args)
 		.then(output => {
+
+			debug(output.split('\n'));
+
 			const silences = output.split('\n').filter(line => { 
 					return line.indexOf('[silencedetect @') > -1 && line.indexOf('silence_end') > -1;
 				})
@@ -64,13 +76,17 @@ function identifyPauses(sourceFilePath){
 				})
 				.map(d => {
 					const halves = d.split(' | ').map( half => { return Number( half.replace( /([A-Za-z\-\_:\ ]+)/ , '') ) } );
-					/* start : halves[0] - halves[1]; duration : halves[1]; end : halves[0]*/
-					// Return the middle of the pause
-					return halves[0] - (halves[1] / 2);
+					return {
+						start : halves[0] - halves[1],
+						duration : halves[1],
+						end : halves[0],
+						middle : halves[0] - ( ( halves[0] - halves[1] ) / 2)
+					};
 				})
 			;
 
 			debug(silences);
+			return silences;
 
 		})
 		.catch(err => {
@@ -80,54 +96,139 @@ function identifyPauses(sourceFilePath){
 
 }
 
-// ffmpeg -i somefile.mp3 -f segment -segment_time 3 -c copy out%03d.mp3
-module.exports = function(sourceFilePath, jobID, duration = 3){
+function getClips(pauses){
 
-	identifyPauses(sourceFilePath);
+	const clips = [];
+	let lastPause = 0;
+
+	for(let z = 0; z < pauses.length - 1; z += 1){
+		
+		clips.push({
+			start : lastPause,
+			duration : pauses[z + 1].end - lastPause
+		});
+
+		lastPause = pauses[z + 1].end;
+
+	}
+
+	return clips;
+
+}
+
+function getListOfSplitFiles(directory){
 
 	return new Promise( (resolve, reject) => {
+		debug(directory)
+		fs.readdir(directory, (err, files) => {
+			if(err){
+				reject(err);
+			} else {
+				resolve(files.map(f => {return `${directory}/${f}`;}));
+			}
+		});
 
-		// const jobID = shortID();
+	} );
+
+}
+
+function splitFileAtSpecificIntervals(sourceFilePath, jobID, duration = 3){
+
+	return new Promise( (resolve, reject) => {
+		
 		const splitFilesDestination = `${tmpPath}/__${jobID}`;
+		
+		fs.mkdir(splitFilesDestination, function(err){
+
+			if(err){
+				reject(err);
+			} else {
+
+
+				const args = [
+					'-i',
+					sourceFilePath,
+					'-f',
+					'segment',
+					'-segment_time',
+					duration,
+					'-c',
+					'copy',
+					`${splitFilesDestination}/out%03d.wav`
+				];
+
+				runFFmpeg(args)
+					.then(function(){
+						getListOfSplitFiles(splitFilesDestination)
+							.then(files => resolve(files));
+						;
+					})
+					.catch(err => {
+						debug(`An error occurred splitting the audio`);
+						reject(err);
+					})
+				;
+
+			}
+
+		});
+	} );
+
+
+}
+
+function splitFileOnInstancesOfSilence(sourceFilePath, jobID){
+
+	return new Promise( (resolve, reject) => {
+		const splitFilesDestination = `${tmpPath}/_${jobID}`;
 
 		fs.mkdir(splitFilesDestination, function(err){
 
-			debug(err);
-			
-			//ffmpeg -i [INPUT] -af silencedetect=n=-40dB:d=0.2 -f null -
-			const args = [
-				'-i',
-				sourceFilePath,
-				'-f',
-				'segment',
-				'-segment_time',
-				duration,
-				'-c',
-				'copy',
-				`${splitFilesDestination}/out%03d.wav`
-			];
-			debug(`Splitting files in ${tmpPath}/${jobID}/`);
-			
-			runFFmpeg(args)
-				.then(function(){
-					fs.readdir(splitFilesDestination, (err, files) => {
-						if(err){
-							reject(err);
-						} else {
-							resolve(files.map(f => {return `${splitFilesDestination}/${f}`;}));
-						}
-					});
-				})
-				.catch(err => {
-					debug(`An error occurred splitting the audio`);
-					reject(err);
-				})
-			;
+			if(err){
+				reject(err);
+			} else {
+
+				identifyPauses(sourceFilePath)
+					.then(pauses => getClips(pauses))
+					.then(clips => {
+						debug(clips)
+						return Promise.all( clips.map( (clip, idx) => {
+
+							const args = [
+								'-ss',
+								clip.start,
+								'-t',
+								clip.duration,
+								'-i',
+								sourceFilePath,
+								`${splitFilesDestination}/out${ zeroPad(idx) }.wav`
+							];
+
+							return runFFmpeg(args);
+
+						} ) );
+
+					})
+					.then(function(){
+						getListOfSplitFiles(splitFilesDestination)
+							.then(files => resolve(files));
+						;
+					})
+					.catch(err => {
+						debug(`An error occurred splitting the audio`);
+						reject(err);
+					})
+				;
+
+			}
 
 		});
 
-	});
+	} )
 
+}
 
-
+module.exports = {
+	atIntervals : splitFileAtSpecificIntervals,
+	onSilence : splitFileOnInstancesOfSilence
 };

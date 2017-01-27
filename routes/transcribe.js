@@ -18,7 +18,13 @@ const jobs = require('../bin/lib/jobs');
 function prepareAudio(filePath, jobID, duration){
 
 	return extractAudio(filePath, jobID)
-		.then(file => splitAudio(file, jobID, duration))
+		.then(file => {
+			if(duration){
+				return splitAudio.atIntervals(file, jobID, duration);
+			} else {
+				return splitAudio.onSilence(file, jobID);
+			}
+		})
 	;
 
 }
