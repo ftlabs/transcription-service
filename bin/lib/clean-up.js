@@ -9,9 +9,10 @@ module.exports = function(jobID){
 
 	return new Promise( (resolve) => {
 
-		// fs.unlink(`${tmpPath}/${jobID}`, resolve());
 		rimraf(`${tmpPath}/${jobID}`, function(){
-			rimraf(`${tmpPath}/__${jobID}`, resolve);
+			rimraf(`${tmpPath}/_${jobID}`, function(){
+				rimraf(`${tmpPath}/__${jobID}`, resolve);
+			});
 		});
 
 	})
