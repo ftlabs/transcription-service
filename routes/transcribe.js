@@ -31,11 +31,11 @@ function generateTranscriptions(audioFile, req, res){
 
 	res.json({
 		status : 'ok',
-		message : `Job created. Please check http://localhost:3000/get/${jobID} to get status/transcription.`
+		message : `Job created. Please check ${process.env.SERVICE_ORIGIN}/get/${jobID} to get status/transcription.`
 	})
 
 	// Convert the audio to .wav format
-	prepareAudio(audioFile, jobID, 55) 
+	prepareAudio(audioFile, jobID, 55)
 		// Get a transcription of the whole audio to serve as a guide for the chunks
 		.then(audio => transcribeAudio(audio))
 		.then(transcriptions => {
