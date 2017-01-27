@@ -37,6 +37,7 @@ function generateTranscriptions(audioFile, req, res){
 
 	res.json({
 		status : 'ok',
+		id : jobID,
 		message : `Job created. Please check ${process.env.SERVICE_ORIGIN}/get/${jobID} to get status/transcription.`
 	})
 
