@@ -1,4 +1,5 @@
 // 40 Megabytes
+const debug = require('debug')('bin:lib:limit-request-size');
 const MAX_FILE_SIZE = Number( process.env.MAX_FILE_SIZE ) || 41943040;
 
 module.exports = function(req, res, next){
