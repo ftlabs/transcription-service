@@ -41,7 +41,7 @@ function generateTranscriptions(audioFile, req, res){
 	})
 
 	// Convert the audio to .wav format
-	prepareAudio(audioFile, jobID, 55)
+	prepareAudio(audioFile, jobID, process.env.AUDIO_MAX_DURATION_TIME || 55)
 		// Get a transcription of the whole audio to serve as a guide for the chunks
 		.then(audio => transcribeAudio(audio))
 		.then(transcriptions => {
