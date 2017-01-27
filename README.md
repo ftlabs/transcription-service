@@ -39,7 +39,7 @@ This endpoint is protected by S3O. If authentication is successful, you'll recei
 }
 ```
 
-For every other endpoint, this token must be included as a query paramter ```?token=VALID_TOKEN```.
+For every other endpoint, this token must be included as a query parameter ```?token=VALID_TOKEN```.
 
 ### Posting a file for transcription
 
@@ -57,15 +57,17 @@ If the upload is successful, a JSON object will be returned with a stauts, id, a
 ```
 {
 	"status": "ok",
-	"message": "Job created. Please check https://ftlabs-transcription.herokuapp.com/get/HJBSkJKDg to get status/transcription."
+	"id" : "VALID_ID"
+	"message": "Job created. Please check https://ftlabs-transcription.herokuapp.com/get/VALID_ID to get status/transcription."
 }
 ```
 
-### Checking + getting your transcription
+### Checking and getting your transcription
 
 Transcriptions take time (01:30s per 5 minutes of audio as a rule-of-thumb). You can check the status of the transcription process by visiting:
 
-```https://ftlabs-transcription.herokuapp.com/get/YOUR_JOB_ID```
+`https://ftlabs-transcription.herokuapp.com/get/YOUR_JOB_ID`
+
 
 If the job is not finished, you'll recieve:
 
@@ -108,7 +110,7 @@ if the job is finished, you'll recieved a JSON object with both the whole transc
 
 You can also have the transcription returned as a VTT file by passing adding a query parameter to the GET request. 
 
-```https://ftlabs-transcription.herokuapp.com/get/YOUR_JOB_ID?output=vtt```
+`https://ftlabs-transcription.herokuapp.com/get/YOUR_JOB_ID?output=vtt`
 
 This will not trigger a new transcription, it will rearrange the existing data into the VTT format.
 
