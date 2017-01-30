@@ -1,9 +1,15 @@
 <div class="mediaDrop">
 	
-	<p>Drop a media for transcription<br>or click this box to select a file...</p>
-	<!--<p>File must be {{validFileTypes}}</p>-->
-	<p>File must be <wbr>{{#each validFileTypes}}<strong>.{{this}}</strong> {{/each}}</p>
-	<input type="file" data-invisible="true" />
+	<div class="info">
+		<p>Drop a media for transcription<br>or click this box to select a file...</p>
+		<!--<p>File must be {{validFileTypes}}</p>-->
+		<p>File must be <wbr>{{#each validFileTypes}}<strong>.{{this}}</strong> {{/each}}</p>
+		<input type="file" data-invisible="true" />
+	</div>
+	<div class="droppedInfo">
+		<p data-hidden="true"></p>
+	</div>
+
 </div>
 
 <div class="transcribeOptions">
@@ -76,17 +82,28 @@
 			document.body.dataset['dragging'] = 'false';
 		}, false);
 
+		function resetEverything(){
+
+			fileData = undefined;
+			resultsHolder.dataset.hidden = 'true';
+			dropZone.dataset.ready = 'false';
+			dropZone.querySelector('.info').dataset.hidden = 'false';
+			dropZone.querySelector('.droppedInfo p').dataset.hidden = "true";
+		}
+
 		function handleSelectedFile(e, wasDropped){
 
 			var selectedFile = wasDropped ? e.dataTransfer.files[0] : e;
-			var reader = new FileReader();
-
-			reader.onload = function(f){
-				console.log(f.target.result, f.target.result.byteLength);
-				fileData = f.target.result;
-			}
-
 			fileData = selectedFile;
+			console.log(selectedFile);
+			dropZone.dataset.ready = "true";
+			dropZone.querySelector('.info').dataset.hidden = 'true';
+			var p = dropZone.querySelector('.droppedInfo p');
+			p.textContent = selectedFile.name;
+
+			p.dataset.hidden = "false";
+
+			//selectedFile.name
 
 		}
 
@@ -187,6 +204,7 @@
 
 		dropZone.addEventListener('drop', function(e){
 			console.log(this.dataset.filetype);
+			resetEverything();
 			handleSelectedFile(e, true);
 		}, false);
 
@@ -197,6 +215,7 @@
 		fileSelect.addEventListener('change', function(e){
 			console.log(e);
 			console.log(this.files);
+			resetEverything();
 			handleSelectedFile(this.files[0], false);
 		}, false);
 

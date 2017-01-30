@@ -37,7 +37,7 @@ main{
 
 .mediaDrop{
     width: 480px;
-    height: 360px;
+    height: 150px;
     background: #b0b0b0;
     display: flex;
     flex-direction: column;
@@ -50,6 +50,11 @@ main{
     margin-right: auto;
     border-radius: 3px;
 	margin-bottom: 1em;
+	text-align: center;
+}
+
+.mediaDrop[data-ready="true"]{
+	background-image: url('https://www.ft.com/__origami/service/image/v2/images/raw/fticon-v1:upload%3Fcache-bust%3D2476322?width=200&source=ftlabs-transcription-dashboard');
 }
 
 body[data-dragging="true"] .mediaDrop{
