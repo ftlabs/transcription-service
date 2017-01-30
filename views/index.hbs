@@ -1,0 +1,229 @@
+<div class="mediaDrop">
+	
+	<div class="info">
+		<p>Drop a media for transcription<br>or click this box to select a file...</p>
+		<!--<p>File must be {{validFileTypes}}</p>-->
+		<p>File must be <wbr>{{#each validFileTypes}}<strong>.{{this}}</strong> {{/each}}</p>
+		<input type="file" data-invisible="true" />
+	</div>
+	<div class="droppedInfo">
+		<p data-hidden="true"></p>
+	</div>
+
+</div>
+
+<div class="transcribeOptions">
+	
+	<div class="o-forms">
+
+		<div class="outputFormatSelection">
+			<label class="o-forms__label">Transcription Output Type</label>
+			<input type="radio" name="radio" value="json" class="o-forms__radio" id="jsonOutput" checked></input>
+			<label for="jsonOutput" class="o-forms__label">JSON</label>
+			<input type="radio" name="radio" value="vtt" class="o-forms__radio" id="vttOutput"></input>
+			<label for="vttOutput" class="o-forms__label">VTT</label>
+		</div>
+
+		<label for="o-forms-standard" class="o-forms__label">Service Token</label>
+		<small class="o-forms__additional-info"><a href="/token/generate" target="_blank">Get a token</a></small>
+		<input type="text" id="o-forms-standard" placeholder="3d3e5af97225421a8d1b3a88f34022cf" class="o-forms__text tokenInput"></input>
+
+	</div>
+
+	<input type="submit" value="Transcribe" class="o-buttons o-buttons--standout o-buttons--big submitData" />
+
+</div>
+
+<div class="transcriptionResults" data-hidden="true">
+	<h1>Transcription Result</h1>
+	<pre class="output">
+
+	</pre>
+</div>
+
+<script>
+
+	(function(){
+
+		'use strict';
+
+		var prevent = function(e){e.preventDefault();e.stopImmediatePropagation();};
+		var validFileTypes = [{{#each validFileTypes}}'{{this}}',{{/each}}];
+		var fileData = undefined;
+		var dropZone = document.querySelector('.mediaDrop');
+		var fileSelect = document.querySelector('input[type="file"]');
+		var submitBtn = document.querySelector('.submitData');
+
+		var tokenInput = document.querySelector('.tokenInput');
+		var outputRadio = document.querySelector('.outputFormatSelection');
+
+		var resultsHolder = document.querySelector('.transcriptionResults');
+		var resultsOutput = resultsHolder.querySelector('.output');
+
+		var jobStatus = undefined;
+
+		window.addEventListener('drop', function(e){
+			prevent(e);
+			console.log(e);
+			document.body.dataset['dragging'] = 'false';
+		}, false);
+
+		window.addEventListener('dragover', function(e){
+			prevent(e);
+		}, false);
+
+		window.addEventListener('dragenter', function(e){
+			prevent(e);
+			document.body.dataset['dragging'] = 'true';
+		}, false);
+
+		window.addEventListener('dragend', function(e){
+			prevent(e);
+			document.body.dataset['dragging'] = 'false';
+		}, false);
+
+		function resetEverything(){
+
+			fileData = undefined;
+			resultsHolder.dataset.hidden = 'true';
+			dropZone.dataset.ready = 'false';
+			dropZone.querySelector('.info').dataset.hidden = 'false';
+			dropZone.querySelector('.droppedInfo p').dataset.hidden = "true";
+		}
+
+		function handleSelectedFile(e, wasDropped){
+
+			var selectedFile = wasDropped ? e.dataTransfer.files[0] : e;
+			fileData = selectedFile;
+			console.log(selectedFile);
+			dropZone.dataset.ready = "true";
+			dropZone.querySelector('.info').dataset.hidden = 'true';
+			var p = dropZone.querySelector('.droppedInfo p');
+			p.textContent = selectedFile.name;
+
+			p.dataset.hidden = "false";
+
+			//selectedFile.name
+
+		}
+
+		function displayResults(data, outputType){
+
+			resultsOutput.textContent = outputType === 'json' ? JSON.stringify(data) : data.vtt;
+			resultsHolder.dataset.hidden = "false";
+
+		}
+
+		function checkJobStatus(id, outputType){
+
+			return fetch('/get/' + id + "?output=" + outputType)
+				.then(function(res){
+					if(res.status > 202){
+						throw res;
+					} else {
+						return res;
+					}
+				})
+				.then(function(res){
+					
+					if(res.status === 200){
+
+						if(outputType === 'vtt'){
+							return res.text()
+								.then(function(VTT){
+									return {
+										finished : true,
+										vtt: VTT
+									};
+								})
+							;
+						} else {
+							return res.json();
+						}
+
+					} else {
+						return res.json();
+					}
+
+				})
+				.catch(function(err){
+					console.error(err);
+				})
+			;
+
+		}
+
+		function uploadFormToServer(){
+			var oReq = new XMLHttpRequest();
+			var queryParameters = "?token=" + tokenInput.value + "&output=" + outputRadio.querySelector('input:checked').value;
+
+			oReq.upload.addEventListener('progress', function(evt){
+				
+				var percentUploaded = (evt.loaded / evt.total) * 100;
+				console.log(percentUploaded);
+
+			}, false);
+
+			oReq.open("POST", "/transcribe" + queryParameters, true);
+			
+			oReq.onload = function(oEvent) {
+
+				if (oReq.status == 200) {
+					var data = JSON.parse(oReq.responseText);
+					console.log("Upload successful");
+					console.log(data);
+					(function(jobID, outputType){
+						
+						jobStatus = setInterval(function(){
+							console.log(jobID);
+							checkJobStatus(jobID, outputType)
+								.then(function(data){
+
+									console.log(data);
+									if(data.finished === true){
+										clearInterval(jobStatus);
+										console.log('FINISHED');
+										displayResults(data, outputType);
+									}
+
+								})
+							;
+						}, 3000);
+
+					})(data.id, outputRadio.querySelector('input:checked').value);
+
+				} else {
+					console.error("Upload failed");
+					console.error(oReq);
+				}
+			};
+
+			oReq.send(fileData);
+
+		}
+
+		dropZone.addEventListener('drop', function(e){
+			console.log(this.dataset.filetype);
+			resetEverything();
+			handleSelectedFile(e, true);
+		}, false);
+
+		dropZone.addEventListener('click', function(e){
+			fileSelect.click();
+		}, false);
+
+		fileSelect.addEventListener('change', function(e){
+			console.log(e);
+			console.log(this.files);
+			resetEverything();
+			handleSelectedFile(this.files[0], false);
+		}, false);
+
+		submitBtn.addEventListener('click', function(e){
+			uploadFormToServer();
+		}, false);
+
+	})();
+
+
+</script>

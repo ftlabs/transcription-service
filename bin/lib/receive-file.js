@@ -2,7 +2,7 @@ const debug = require('debug')('bin:lib:receive-file');
 const fs = require('fs');
 const shortID = require('shortid').generate;
 
-const checkFileType = require('./valid-file');
+const checkFileType = require('./valid-file').check;
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
 module.exports = function(req){
@@ -17,7 +17,7 @@ module.exports = function(req){
 		let fileInfo = undefined
 
 		req.on('data', function (data) {
-
+			debug(data);
 			if(requestSize === 0){
 				fileInfo = checkFileType(data);
 				

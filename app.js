@@ -4,14 +4,20 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
+const registerPartials = require('./bin/lib/register-partials')({directory : `${__dirname}/views/partials`});
+
 const app = express();
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'hbs');
+
 app.use(logger('dev'));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'client')));
 
+app.use('/', require('./routes/index'));
 app.use('/get', require('./routes/get'));
 app.use('/transcribe', require('./routes/transcribe'));
 app.use('/token', require('./routes/token'));

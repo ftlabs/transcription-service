@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const shortID = require('shortid').generate;
 const fs = require('fs');
 
-const validFile = require('./valid-file');
+const validFile = require('./valid-file').check;
 
 // Default 40 megabytes
 const MAX_FILE_SIZE = Number( process.env.MAX_FILE_SIZE ) || 41943040;
