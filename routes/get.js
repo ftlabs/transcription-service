@@ -11,7 +11,7 @@ router.get('/:jobID', (req, res) => {
 	const job = jobs.get(jobID);
 	const asVTT = req.query.output === 'vtt';
 
-	if(job === null){
+	if(job === false){
 		res.status(404);
 		res.json({
 			status : 'error',
@@ -53,6 +53,7 @@ router.get('/:jobID', (req, res) => {
 			}
 
 		} else {
+			res.status(202);
 			res.json(job);
 		}
 

@@ -89,26 +89,45 @@
 			fileData = selectedFile;
 
 		}
-		
-		function displayResults(data){
 
-			resultsOutput.textContent = JSON.stringify(data);
+		function displayResults(data, outputType){
+
+			resultsOutput.textContent = outputType === 'json' ? JSON.stringify(data) : data.vtt;
 			resultsHolder.dataset.hidden = "false";
 
 		}
 
-		function checkJobStatus(id){
+		function checkJobStatus(id, outputType){
 
-			return fetch('/get/' + id)
+			return fetch('/get/' + id + "?output=" + outputType)
 				.then(function(res){
-					if(res.status !== 200){
+					if(res.status > 202){
 						throw res;
 					} else {
 						return res;
 					}
 				})
 				.then(function(res){
-					return res.json();
+					
+					if(res.status === 200){
+
+						if(outputType === 'vtt'){
+							return res.text()
+								.then(function(VTT){
+									return {
+										finished : true,
+										vtt: VTT
+									};
+								})
+							;
+						} else {
+							return res.json();
+						}
+
+					} else {
+						return res.json();
+					}
+
 				})
 				.catch(function(err){
 					console.error(err);
@@ -136,25 +155,25 @@
 					var data = JSON.parse(oReq.responseText);
 					console.log("Upload successful");
 					console.log(data);
-					(function(jobID){
+					(function(jobID, outputType){
 						
 						jobStatus = setInterval(function(){
 							console.log(jobID);
-							checkJobStatus(jobID)
+							checkJobStatus(jobID, outputType)
 								.then(function(data){
 
 									console.log(data);
 									if(data.finished === true){
 										clearInterval(jobStatus);
 										console.log('FINISHED');
-										displayResults(data);
+										displayResults(data, outputType);
 									}
 
 								})
 							;
 						}, 3000);
 
-					})(data.id);
+					})(data.id, outputRadio.querySelector('input:checked').value);
 
 				} else {
 					console.error("Upload failed");
@@ -165,8 +184,6 @@
 			oReq.send(fileData);
 
 		}
-
-
 
 		dropZone.addEventListener('drop', function(e){
 			console.log(this.dataset.filetype);
