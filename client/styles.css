@@ -68,3 +68,18 @@ body[data-dragging="true"] .mediaDrop{
 .transcribeOptions .o-forms div{
 	margin-bottom: 1em;
 }
+
+.transcriptionResults{
+	width: 100%;
+    max-width: 800px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.transcriptionResults pre{
+	text-align: left;
+	overflow: scroll;
+	background: #e8e8e8;
+	border-radius: 3px;
+}

@@ -2,7 +2,7 @@
 	
 	<p>Drop a media for transcription<br>or click this box to select a file...</p>
 	<!--<p>File must be {{validFileTypes}}</p>-->
-	<p>File must be {{#each validFileTypes}}<strong>.{{this}}</strong> {{/each}}</p>
+	<p>File must be <wbr>{{#each validFileTypes}}<strong>.{{this}}</strong> {{/each}}</p>
 	<input type="file" data-invisible="true" />
 </div>
 
@@ -10,22 +10,29 @@
 	
 	<div class="o-forms">
 
-		<div>
+		<div class="outputFormatSelection">
 			<label class="o-forms__label">Transcription Output Type</label>
-			<input type="radio" name="radio" value="1" class="o-forms__radio" id="radio11" checked></input>
-			<label for="radio11" class="o-forms__label">JSON</label>
-			<input type="radio" name="radio" value="2" class="o-forms__radio" id="radio12"></input>
-			<label for="radio12" class="o-forms__label">VTT</label>
+			<input type="radio" name="radio" value="json" class="o-forms__radio" id="jsonOutput" checked></input>
+			<label for="jsonOutput" class="o-forms__label">JSON</label>
+			<input type="radio" name="radio" value="vtt" class="o-forms__radio" id="vttOutput"></input>
+			<label for="vttOutput" class="o-forms__label">VTT</label>
 		</div>
 
 		<label for="o-forms-standard" class="o-forms__label">Service Token</label>
 		<small class="o-forms__additional-info"><a href="/token/generate" target="_blank">Get a token</a></small>
-		<input type="text" id="o-forms-standard" placeholder="3d3e5af97225421a8d1b3a88f34022cf" class="o-forms__text" required="true"></input>
+		<input type="text" id="o-forms-standard" placeholder="3d3e5af97225421a8d1b3a88f34022cf" class="o-forms__text tokenInput"></input>
 
 	</div>
 
 	<input type="submit" value="Transcribe" class="o-buttons o-buttons--standout o-buttons--big submitData" />
 
+</div>
+
+<div class="transcriptionResults" data-hidden="true">
+	<h1>Transcription Result</h1>
+	<pre class="output">
+
+	</pre>
 </div>
 
 <script>
@@ -40,7 +47,12 @@
 		var dropZone = document.querySelector('.mediaDrop');
 		var fileSelect = document.querySelector('input[type="file"]');
 		var submitBtn = document.querySelector('.submitData');
-		var tokenInput = "";
+
+		var tokenInput = document.querySelector('.tokenInput');
+		var outputRadio = document.querySelector('.outputFormatSelection');
+
+		var resultsHolder = document.querySelector('.transcriptionResults');
+		var resultsOutput = resultsHolder.querySelector('.output');
 
 		var jobStatus = undefined;
 
@@ -64,7 +76,6 @@
 			document.body.dataset['dragging'] = 'false';
 		}, false);
 
-
 		function handleSelectedFile(e, wasDropped){
 
 			var selectedFile = wasDropped ? e.dataTransfer.files[0] : e;
@@ -78,10 +89,38 @@
 			fileData = selectedFile;
 
 		}
+		
+		function displayResults(data){
+
+			resultsOutput.textContent = JSON.stringify(data);
+			resultsHolder.dataset.hidden = "false";
+
+		}
+
+		function checkJobStatus(id){
+
+			return fetch('/get/' + id)
+				.then(function(res){
+					if(res.status !== 200){
+						throw res;
+					} else {
+						return res;
+					}
+				})
+				.then(function(res){
+					return res.json();
+				})
+				.catch(function(err){
+					console.error(err);
+				})
+			;
+
+		}
 
 		function uploadFormToServer(){
 			var oReq = new XMLHttpRequest();
-			
+			var queryParameters = "?token=" + tokenInput.value + "&output=" + outputRadio.querySelector('input:checked').value;
+
 			oReq.upload.addEventListener('progress', function(evt){
 				
 				var percentUploaded = (evt.loaded / evt.total) * 100;
@@ -89,28 +128,40 @@
 
 			}, false);
 
-			oReq.open("POST", "/transcribe?token=54b3b5ac9fe84b88a84ab2cb14d67335", true);
+			oReq.open("POST", "/transcribe" + queryParameters, true);
 			
 			oReq.onload = function(oEvent) {
-				debugger;
+
 				if (oReq.status == 200) {
-					var id = oReq.responseText;
+					var data = JSON.parse(oReq.responseText);
 					console.log("Upload successful");
+					console.log(data);
 					(function(jobID){
 						
 						jobStatus = setInterval(function(){
-							//checkJobStatus(jobID);
 							console.log(jobID);
+							checkJobStatus(jobID)
+								.then(function(data){
+
+									console.log(data);
+									if(data.finished === true){
+										clearInterval(jobStatus);
+										console.log('FINISHED');
+										displayResults(data);
+									}
+
+								})
+							;
 						}, 3000);
 
-					})(id);
+					})(data.id);
 
 				} else {
 					console.error("Upload failed");
 					console.error(oReq);
 				}
 			};
-			debugger;
+
 			oReq.send(fileData);
 
 		}
