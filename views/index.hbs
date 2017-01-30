@@ -1,8 +1,9 @@
 <div class="mediaDrop">
 	
 	<p>Drop a media for transcription<br>or click this box to select a file...</p>
-	<p>File must be {{validFileTypes}}</p>
-
+	<!--<p>File must be {{validFileTypes}}</p>-->
+	<p>File must be {{#each validFileTypes}}<strong>.{{this}}</strong> {{/each}}</p>
+	<input type="file" data-invisible="true" />
 </div>
 
 <div class="transcribeOptions">
@@ -23,7 +24,7 @@
 
 	</div>
 
-	<input type="submit" value="Transcribe" class="o-buttons o-buttons--standout o-buttons--big" />
+	<input type="submit" value="Transcribe" class="o-buttons o-buttons--standout o-buttons--big submitData" />
 
 </div>
 
@@ -31,8 +32,17 @@
 
 	(function(){
 
+		'use strict';
+
 		var prevent = function(e){e.preventDefault();e.stopImmediatePropagation();};
+		var validFileTypes = [{{#each validFileTypes}}'{{this}}',{{/each}}];
+		var fileData = undefined;
 		var dropZone = document.querySelector('.mediaDrop');
+		var fileSelect = document.querySelector('input[type="file"]');
+		var submitBtn = document.querySelector('.submitData');
+		var tokenInput = "";
+
+		var jobStatus = undefined;
 
 		window.addEventListener('drop', function(e){
 			prevent(e);
@@ -55,22 +65,75 @@
 		}, false);
 
 
-		function handleDroppedFile(e){
+		function handleSelectedFile(e, wasDropped){
 
-			var droppedFile = event.dataTransfer.files[0];
+			var selectedFile = wasDropped ? e.dataTransfer.files[0] : e;
 			var reader = new FileReader();
 
 			reader.onload = function(f){
 				console.log(f.target.result, f.target.result.byteLength);
+				fileData = f.target.result;
 			}
 
-			reader.readAsArrayBuffer(droppedFile);
-		
+			fileData = selectedFile;
+
 		}
+
+		function uploadFormToServer(){
+			var oReq = new XMLHttpRequest();
+			
+			oReq.upload.addEventListener('progress', function(evt){
+				
+				var percentUploaded = (evt.loaded / evt.total) * 100;
+				console.log(percentUploaded);
+
+			}, false);
+
+			oReq.open("POST", "/transcribe?token=54b3b5ac9fe84b88a84ab2cb14d67335", true);
+			
+			oReq.onload = function(oEvent) {
+				debugger;
+				if (oReq.status == 200) {
+					var id = oReq.responseText;
+					console.log("Upload successful");
+					(function(jobID){
+						
+						jobStatus = setInterval(function(){
+							//checkJobStatus(jobID);
+							console.log(jobID);
+						}, 3000);
+
+					})(id);
+
+				} else {
+					console.error("Upload failed");
+					console.error(oReq);
+				}
+			};
+			debugger;
+			oReq.send(fileData);
+
+		}
+
+
 
 		dropZone.addEventListener('drop', function(e){
 			console.log(this.dataset.filetype);
-			handleDroppedFile(e);
+			handleSelectedFile(e, true);
+		}, false);
+
+		dropZone.addEventListener('click', function(e){
+			fileSelect.click();
+		}, false);
+
+		fileSelect.addEventListener('change', function(e){
+			console.log(e);
+			console.log(this.files);
+			handleSelectedFile(this.files[0], false);
+		}, false);
+
+		submitBtn.addEventListener('click', function(e){
+			uploadFormToServer();
 		}, false);
 
 	})();

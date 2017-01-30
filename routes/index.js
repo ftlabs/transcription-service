@@ -10,7 +10,7 @@ router.get('/', S3O, function(req, res, next){
 		title : 'FT Labs Transcription Service',
 		serviceName : process.env.SERVICE_NAME || 'FT Labs Transcription Service',
 		shortServiceName : process.env.SERVICE_NAME || 'FT Labs Transcriptions',
-		validFileTypes : `.${validFiles.getTypes.join(' or .')}`
+		validFileTypes : validFiles.getTypes
 	});
 
 });	
