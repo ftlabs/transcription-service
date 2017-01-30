@@ -1,0 +1,62 @@
+html, body{
+	padding: 0;
+	margin: 0;
+}
+
+html{
+	width: 100%;
+	height: 100%;
+	background-color: #fff1e0;
+	font-family: MetricWeb, sans-serif;
+}
+
+html * {
+	box-sizing: border-box;
+}
+
+main{
+    width: 100%;
+    max-width: 1180px;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+	align-items: center;
+}
+
+.mediaDrop{
+    width: 480px;
+    height: 360px;
+    background: #b0b0b0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    color: white;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 3px;
+	margin-bottom: 1em;
+}
+
+body[data-dragging="true"] .mediaDrop{
+	border: 10px solid #777777;
+    border-style: dashed;
+}
+
+.transcribeOptions{
+	display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.transcribeOptions .o-forms div{
+	margin-bottom: 1em;
+}

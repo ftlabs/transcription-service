@@ -1,0 +1,79 @@
+<div class="mediaDrop">
+	
+	<p>Drop a media for transcription<br>or click this box to select a file...</p>
+	<p>File must be {{validFileTypes}}</p>
+
+</div>
+
+<div class="transcribeOptions">
+	
+	<div class="o-forms">
+
+		<div>
+			<label class="o-forms__label">Transcription Output Type</label>
+			<input type="radio" name="radio" value="1" class="o-forms__radio" id="radio11" checked></input>
+			<label for="radio11" class="o-forms__label">JSON</label>
+			<input type="radio" name="radio" value="2" class="o-forms__radio" id="radio12"></input>
+			<label for="radio12" class="o-forms__label">VTT</label>
+		</div>
+
+		<label for="o-forms-standard" class="o-forms__label">Service Token</label>
+		<small class="o-forms__additional-info"><a href="/token/generate" target="_blank">Get a token</a></small>
+		<input type="text" id="o-forms-standard" placeholder="3d3e5af97225421a8d1b3a88f34022cf" class="o-forms__text" required="true"></input>
+
+	</div>
+
+	<input type="submit" value="Transcribe" class="o-buttons o-buttons--standout o-buttons--big" />
+
+</div>
+
+<script>
+
+	(function(){
+
+		var prevent = function(e){e.preventDefault();e.stopImmediatePropagation();};
+		var dropZone = document.querySelector('.mediaDrop');
+
+		window.addEventListener('drop', function(e){
+			prevent(e);
+			console.log(e);
+			document.body.dataset['dragging'] = 'false';
+		}, false);
+
+		window.addEventListener('dragover', function(e){
+			prevent(e);
+		}, false);
+
+		window.addEventListener('dragenter', function(e){
+			prevent(e);
+			document.body.dataset['dragging'] = 'true';
+		}, false);
+
+		window.addEventListener('dragend', function(e){
+			prevent(e);
+			document.body.dataset['dragging'] = 'false';
+		}, false);
+
+
+		function handleDroppedFile(e){
+
+			var droppedFile = event.dataTransfer.files[0];
+			var reader = new FileReader();
+
+			reader.onload = function(f){
+				console.log(f.target.result, f.target.result.byteLength);
+			}
+
+			reader.readAsArrayBuffer(droppedFile);
+		
+		}
+
+		dropZone.addEventListener('drop', function(e){
+			console.log(this.dataset.filetype);
+			handleDroppedFile(e);
+		}, false);
+
+	})();
+
+
+</script>

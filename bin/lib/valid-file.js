@@ -3,7 +3,7 @@ const filetype = require('file-type');
 
 const validFileTypes = process.env.VALID_FILE_TYPES ? process.env.VALID_FILE_TYPES.split(',') : ['mp4', 'wav', 'mp3', 'ogg', 'm4a', 'mxf'];
 
-module.exports = function(buff){
+function checkMediaFileIsValid(buff){
 
 	const fileInfo = filetype(buff);
 
@@ -22,3 +22,8 @@ module.exports = function(buff){
 	}
 
 }
+
+module.exports = {
+	check : checkMediaFileIsValid,
+	getTypes : validFileTypes
+};
