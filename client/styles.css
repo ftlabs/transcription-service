@@ -54,7 +54,9 @@ main{
 }
 
 .mediaDrop[data-ready="true"]{
-	background-image: url('https://www.ft.com/__origami/service/image/v2/images/raw/fticon-v1:upload%3Fcache-bust%3D2476322?width=200&source=ftlabs-transcription-dashboard');
+	background-image: url('https://www.ft.com/__origami/service/image/v2/images/raw/fticon-v1:upload%3Fcache-bust%3D2476322?width=200&source=ftlabs-transcription-dashboard&tint=gray');
+    background-repeat: no-repeat;
+    background-position: 50%;
 }
 
 body[data-dragging="true"] .mediaDrop{
