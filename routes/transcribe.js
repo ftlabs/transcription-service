@@ -101,7 +101,7 @@ function generateTranscriptions(audioFile, req, res){
 		.catch(err => {
 			debug(err);
 			cleanUp(jobID);
-			jobs.failed(jobID);
+			jobs.failed(jobID, err);
 		})
 	;
 	

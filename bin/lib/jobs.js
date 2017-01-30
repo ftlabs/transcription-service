@@ -64,7 +64,7 @@ function completeTranscriptionJob(ID, transcription){
 
 }
 
-function setJobAsFailed(ID){
+function setJobAsFailed(ID, reason){
 	
 	const job = getTranscriptionJob(ID);
 	
@@ -75,6 +75,7 @@ function setJobAsFailed(ID){
 
 	job.finished = true;
 	job.failed = true;
+	job.reason = reason || '';
 	cache.set(ID, JSON.stringify(job) );
 
 }
