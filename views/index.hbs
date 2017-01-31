@@ -43,11 +43,13 @@
 	</div>
 
 	<pre class="output"></pre>
+	<button value="preview" class="o-buttons o-buttons--big previewButton">Preview Transcription</button> 
 	<button value="Finished" class="o-buttons o-buttons--standout o-buttons--big finishedButton">Finished</button> 
 
 </div>
 
 {{>overlay}}
+{{>video}}
 
 <script>
 
@@ -76,6 +78,7 @@
 		var jobStatus = undefined;
 
 		var finishedButton = document.querySelector('.finishedButton');
+		var previewButton = document.querySelector('.previewButton');
 
 		window.addEventListener('drop', function(e){
 			prevent(e);
@@ -133,7 +136,7 @@
 
 			resultsOutput.textContent = outputType === 'json' ? JSON.stringify(data) : data.vtt;
 			resultsHolder.dataset.hidden = "false";
-
+			
 		}
 
 		function checkJobStatus(id, outputType){
@@ -289,6 +292,15 @@
 
 		finishedButton.addEventListener('click', function(){
 			resetEverything();
+		}, false);
+
+		previewButton.addEventListener('click', function(){
+			console.log('Click');
+			checkJobStatus(currentJobID, 'vtt')
+				.then(function(data){					
+					videoPreview.show(URL.createObjectURL(fileData), URL.createObjectURL(new File([data.vtt], 'track.vtt')));
+				})
+			;
 		}, false);
 
 		Array.from(resultsToggle.querySelectorAll('button')).forEach(function(button){

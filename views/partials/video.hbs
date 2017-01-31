@@ -1,0 +1,49 @@
+<div class="overlay video" data-hidden="true">
+	<div class="container">
+
+		<button class="o-buttons o-buttons--standout o-buttons--big closeOverlay">Close</button>
+	</div>
+</div>
+
+<script>
+
+	var videoPreview = (function(){
+
+		var videoOverlay = document.querySelector('.overlay.video');
+		var container = videoOverlay.querySelector('.container');
+		var closeBtn = container.querySelector('.closeOverlay');
+
+		function showVideoPreview(srcURL, subtitlesURL){
+		
+			var vid = document.createElement('video');
+			var subs = document.createElement('track');
+			
+			vid.src = srcURL;
+			vid.setAttribute('controls', 'controls');
+
+			subs.setAttribute('kind', 'captions');
+			subs.setAttribute('srclang', 'en');
+			subs.setAttribute('default', '');
+			subs.src = subtitlesURL;
+
+			vid.appendChild(subs);
+			container.insertBefore(vid, closeBtn);
+
+			videoOverlay.dataset.hidden = 'false';
+			vid.play();
+		}
+
+		closeBtn.addEventListener('click', function(){
+
+			container.removeChild(container.querySelector('video'));
+			videoOverlay.dataset.hidden = "true";
+
+		}, false);
+
+		return{
+			show : showVideoPreview
+		};
+
+	}());
+
+</script>

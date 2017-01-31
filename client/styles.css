@@ -98,7 +98,7 @@ body[data-working="true"] .mediaDrop, body[data-complete="true"] .mediaDrop, bod
 	padding: 1em;
 }
 
-body[data-working="true"] .transcriptionResults .finishedButton{
+body[data-working="true"] .transcriptionResults .finishedButton, body[data-working="true"] .transcriptionResults .previewButton{
     display: none;
 }
 
@@ -132,5 +132,14 @@ body[data-working="true"] .transcriptionResults .finishedButton{
 }
 
 .overlay .container p{
+    margin-bottom: 1em;
+}
+
+.overlay.video .container{
+    max-width: 640px;
+}
+
+.overlay.video .container video{
+    width: 100%;
     margin-bottom: 1em;
 }
