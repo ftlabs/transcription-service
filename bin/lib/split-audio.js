@@ -5,6 +5,7 @@ const ffmpeg = require('ffmpeg-static');
 const shortID = require('shortid').generate;
 
 const tmpPath = process.env.TMP_PATH || '/tmp';
+const maxClipSize = process.env.MAX_CLIP_SIZE || 20;
 
 function zeroPad(num){
 	if(num < 10){
@@ -52,7 +53,7 @@ function runFFmpeg(args){
 }
 
 function identifyPauses(sourceFilePath){
-
+	debug('identifyPauses');
 	// ffmpeg -i /Users/sean.tracey/Downloads/1214e988-b6d7-11e6-ba85-95d1533d9a62.mp3  -af silencedetect=n=-40dB:d=0.2 -f null -
 	const args = [
 		'-i',
@@ -96,8 +97,54 @@ function identifyPauses(sourceFilePath){
 
 }
 
-function getClips(pauses){
+function divideLongClips(clips){
 
+	const adjustedClips = [{
+		start : 0,
+		duration : 0
+	}];
+
+	clips.forEach( clip => {
+
+		if(clip.duration > maxClipSize){
+
+			const newClipSize = 4;
+			const numNewClips = Math.ceil(clip.duration / newClipSize);
+			
+			for(let x = 0; x < numNewClips; x += 1){
+
+				const lastClip = adjustedClips[ adjustedClips.length - 1 ];
+				let newClip;
+				if(x < numNewClips - 1){
+					newClip = {
+						start : lastClip.start + lastClip.duration,
+						duration : newClipSize 
+					};
+				} else {
+					newClip = {
+						start : lastClip.start + lastClip.duration,
+						duration : clip.duration - (lastClip.start + lastClip.duration)
+					};
+				}
+
+				adjustedClips.push(newClip);
+
+			}
+
+		} else {
+			adjustedClips.push(clip);
+		}
+
+	});
+
+	adjustedClips.shift();
+
+	return adjustedClips;
+
+}
+
+function getClips(pauses){
+	debug('getClips');
 	const clips = [];
 	let lastPause = 0;
 
@@ -112,7 +159,7 @@ function getClips(pauses){
 
 	}
 
-	return clips;
+	return divideLongClips(clips);
 
 }
 
@@ -133,7 +180,7 @@ function getListOfSplitFiles(directory){
 }
 
 function splitFileAtSpecificIntervals(sourceFilePath, jobID, duration = 3){
-
+	debug('splitFileAtSpecificIntervals');
 	return new Promise( (resolve, reject) => {
 		
 		const splitFilesDestination = `${tmpPath}/__${jobID}`;
@@ -174,11 +221,10 @@ function splitFileAtSpecificIntervals(sourceFilePath, jobID, duration = 3){
 		});
 	} );
 
-
 }
 
 function splitFileOnInstancesOfSilence(sourceFilePath, jobID){
-
+	debug('splitFileOnInstancesOfSilence');
 	return new Promise( (resolve, reject) => {
 		const splitFilesDestination = `${tmpPath}/_${jobID}`;
 
