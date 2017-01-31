@@ -123,7 +123,7 @@ function divideLongClips(clips){
 				} else {
 					newClip = {
 						start : lastClip.start + lastClip.duration,
-						duration : clip.duration - (lastClip.start + lastClip.duration)
+						duration : (clip.start + clip.duration) - (lastClip.start + lastClip.duration)
 					};
 				}
 
