@@ -66,6 +66,10 @@ body[data-dragging="true"] .mediaDrop{
     border-style: dashed;
 }
 
+body[data-working="true"] .mediaDrop, body[data-complete="true"] .mediaDrop, body[data-working="true"] .transcribeOptions .options, body[data-complete="true"] .transcribeOptions .options{
+    display: none;
+}
+
 .transcribeOptions{
 	display: flex;
     align-items: center;
@@ -92,6 +96,10 @@ body[data-dragging="true"] .mediaDrop{
 	background: #e8e8e8;
 	border-radius: 3px;
 	padding: 1em;
+}
+
+body[data-working="true"] .transcriptionResults .resetButton{
+    display: none;
 }
 
 .alternativeResults{

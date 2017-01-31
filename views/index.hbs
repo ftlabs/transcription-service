@@ -13,7 +13,7 @@
 
 <div class="transcribeOptions">
 	
-	<div class="o-forms">
+	<div class="o-forms options">
 
 		<div class="outputFormatSelection">
 			<label class="o-forms__label">Transcription Output Type</label>
@@ -42,9 +42,9 @@
 		<button class="o-buttons" data-format="vtt">VTT</button>
 	</div>
 
-	<pre class="output">
+	<pre class="output"></pre>
+	<button value="Finished" class="o-buttons o-buttons--standout o-buttons--big finishedButton">Finished</button> 
 
-	</pre>
 </div>
 
 {{>overlay}}
@@ -74,6 +74,8 @@
 
 		var currentJobID = undefined;
 		var jobStatus = undefined;
+
+		var finishedButton = document.querySelector('.finishedButton');
 
 		window.addEventListener('drop', function(e){
 			prevent(e);
@@ -108,6 +110,8 @@
 			currentJobID = undefined;
 			jobStatus = undefined;
 			resultsOutput.textContent = '';
+			document.body.dataset.working = 'false';
+			document.body.dataset.complete = 'false';
 
 		}
 
@@ -174,6 +178,7 @@
 
 		function uploadFormToServer(){
 
+			document.body.dataset.working = 'true';
 			submitBtn.value = "Uploading 0%";
 			
 			var oReq = new XMLHttpRequest();
@@ -218,6 +223,8 @@
 									if(data.finished === true){
 										clearInterval(jobStatus);
 										console.log('FINISHED');
+										document.body.dataset.working = 'false';
+										document.body.dataset.complete = 'true';
 										displayResults(data, outputType);
 										resultsHolder.querySelector('h1').textContent = 'Transcription results';
 										resultsHolder.querySelector('p').textContent = '';
@@ -278,6 +285,10 @@
 			} else {
 				overlay.set('Token Required', 'You must enter a service token into the textbox before trying to submit this request.', undefined, true);
 			}
+		}, false);
+
+		finishedButton.addEventListener('click', function(){
+			resetEverything();
 		}, false);
 
 		Array.from(resultsToggle.querySelectorAll('button')).forEach(function(button){
