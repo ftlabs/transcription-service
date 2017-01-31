@@ -98,7 +98,7 @@ body[data-working="true"] .mediaDrop, body[data-complete="true"] .mediaDrop, bod
 	padding: 1em;
 }
 
-body[data-working="true"] .transcriptionResults .resetButton{
+body[data-working="true"] .transcriptionResults .finishedButton{
     display: none;
 }
 
