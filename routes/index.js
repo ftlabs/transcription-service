@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const S3O = require('s3o-middleware');
+const s3o = require('s3o-middleware');
 
 const validFiles = require('../bin/lib/valid-file');
 
-router.get('/', S3O, function(req, res, next){
+router.get('/', s3o, function(req, res, next){
 
 	res.render('index', {
 		title : 'FT Labs Transcription Service',
@@ -14,5 +14,7 @@ router.get('/', S3O, function(req, res, next){
 	});
 
 });	
+
+router.post('/', s3o);
 
 module.exports = router;
