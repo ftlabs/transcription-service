@@ -47,6 +47,8 @@
 	</pre>
 </div>
 
+{{>overlay}}
+
 <script>
 
 	(function(){
@@ -233,6 +235,13 @@
 				} else {
 					console.error("Upload failed");
 					console.error(oReq);
+					try{
+						var data = JSON.parse(oReq.responseText);
+						overlay.set('Error', data.reason, 'OK', true);
+					} catch(err){
+						console.error('Could not parse responseText object', oReq.responseText);
+						overlay.set('Application Error', 'Sorry, but something went wrong with that request. Please try again, and if it continues to fail, contact FT Labs.', 'OK', true);
+					}
 				}
 			};
 
@@ -258,7 +267,11 @@
 		}, false);
 
 		submitBtn.addEventListener('click', function(e){
-			uploadFormToServer();
+			if(tokenInput.value !== ''){
+				uploadFormToServer();
+			} else {
+				overlay.set('Token Required', 'You must enter a service token into the textbox before trying to submit this request.', undefined, true);
+			}
 		}, false);
 
 		Array.from(resultsToggle.querySelectorAll('button')).forEach(function(button){

@@ -1,0 +1,57 @@
+<div class="overlay" data-hidden="true">
+	<div class="container">
+		<h3 class="title"></h3>
+		<p class="message"></p>
+		<button class="close o-buttons o-buttons--standout o-buttons--big">OK</button>
+	</div>
+</div>
+<script>
+	
+	var overlay = (function(){
+
+		var overlayElement = document.querySelector('.overlay');
+		var titleElement = overlayElement.querySelector('.title');
+		var messageElement = overlayElement.querySelector('.message');
+		var buttonElement = overlayElement.querySelector('.close');
+
+		function showOverlayElement(){
+			overlayElement.dataset.hidden = 'false';
+		}
+
+		function hideOverlayElement(){
+			overlayElement.dataset.hidden = 'true';
+		}
+
+		function setOverlayElementContent(title, message, button, show){
+			if(title){
+				titleElement.textContent = title;
+			}
+
+			if(message){
+				messageElement.textContent = message;
+			}
+
+			if(button){
+				buttonElement.textContent = button;
+			}
+
+			if(show === true){
+				showOverlayElement();
+			}
+		}
+
+		buttonElement.addEventListener('click', function(){
+			console.log('click');
+			hideOverlayElement();
+		}, false);	
+
+		return{
+			show : showOverlayElement,
+			hide : hideOverlayElement,
+			set : setOverlayElementContent
+		};
+
+	}());
+	
+
+</script>
