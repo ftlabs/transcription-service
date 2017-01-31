@@ -166,6 +166,7 @@
 				})
 				.catch(function(err){
 					console.error(err);
+					throw(err);
 				})
 			;
 
@@ -226,6 +227,11 @@
 										resultsOutput.textContent = 'Transcribing...';
 									}
 
+								})
+								.catch(function(){
+									clearInterval(jobStatus);
+									resetEverything();
+									overlay.set('Application Error', 'Sorry, but something went wrong with that request. Please try again, and if it continues to fail, contact FT Labs.', 'OK', true);
 								})
 							;
 						}, 3000);
