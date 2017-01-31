@@ -1,4 +1,4 @@
-<div class="overlay" data-hidden="true">
+<div class="overlay text" data-hidden="true">
 	<div class="container">
 		<h3 class="title"></h3>
 		<p class="message"></p>
@@ -9,7 +9,7 @@
 	
 	var overlay = (function(){
 
-		var overlayElement = document.querySelector('.overlay');
+		var overlayElement = document.querySelector('.overlay.text');
 		var titleElement = overlayElement.querySelector('.title');
 		var messageElement = overlayElement.querySelector('.message');
 		var buttonElement = overlayElement.querySelector('.close');
