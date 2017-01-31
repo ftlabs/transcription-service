@@ -1,7 +1,7 @@
 const debug = require('debug')('bin:lib:valid-file');
 const filetype = require('file-type');
 
-const validFileTypes = process.env.VALID_FILE_TYPES ? process.env.VALID_FILE_TYPES.split(',') : ['mp4', 'wav', 'mp3', 'ogg', 'm4a', 'mxf'];
+const validFileTypes = process.env.VALID_FILE_TYPES ? process.env.VALID_FILE_TYPES.split(',') : ['mp4', 'wav', 'mp3', 'ogg', 'm4a', 'mxf', 'mov'];
 
 function checkMediaFileIsValid(buff){
 

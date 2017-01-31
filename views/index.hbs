@@ -2,7 +2,6 @@
 	
 	<div class="info">
 		<p>Drop a media for transcription<br>or click this box to select a file...</p>
-		<!--<p>File must be {{validFileTypes}}</p>-->
 		<p>File must be <wbr>{{#each validFileTypes}}<strong>.{{this}}</strong> {{/each}}</p>
 		<input type="file" data-invisible="true" />
 	</div>
@@ -36,6 +35,13 @@
 
 <div class="transcriptionResults" data-hidden="true">
 	<h1>Transcription Result</h1>
+	<p class="info"></p>
+
+	<div class="o-buttons__group alternativeResults" data-hidden="true">
+		<button class="o-buttons" aria-selected="false" data-format="json">JSON</button>
+		<button class="o-buttons" data-format="vtt">VTT</button>
+	</div>
+
 	<pre class="output">
 
 	</pre>
@@ -60,6 +66,11 @@
 		var resultsHolder = document.querySelector('.transcriptionResults');
 		var resultsOutput = resultsHolder.querySelector('.output');
 
+		var resultsToggle = document.querySelector('.alternativeResults');
+
+		var jobInProgress = false;
+
+		var currentJobID = undefined;
 		var jobStatus = undefined;
 
 		window.addEventListener('drop', function(e){
@@ -89,6 +100,13 @@
 			dropZone.dataset.ready = 'false';
 			dropZone.querySelector('.info').dataset.hidden = 'false';
 			dropZone.querySelector('.droppedInfo p').dataset.hidden = "true";
+			submitBtn.value = 'Transcribe';
+			submitBtn.dataset.hidden = 'false';
+			jobInProgress = false;
+			currentJobID = undefined;
+			jobStatus = undefined;
+			resultsOutput.textContent = '';
+
 		}
 
 		function handleSelectedFile(e, wasDropped){
@@ -102,8 +120,6 @@
 			p.textContent = selectedFile.name;
 
 			p.dataset.hidden = "false";
-
-			//selectedFile.name
 
 		}
 
@@ -154,12 +170,16 @@
 		}
 
 		function uploadFormToServer(){
+
+			submitBtn.value = "Uploading 0%";
+			
 			var oReq = new XMLHttpRequest();
 			var queryParameters = "?token=" + tokenInput.value + "&output=" + outputRadio.querySelector('input:checked').value;
 
 			oReq.upload.addEventListener('progress', function(evt){
 				
 				var percentUploaded = (evt.loaded / evt.total) * 100;
+				submitBtn.value = "Uploading " + (percentUploaded | 0) + "%";
 				console.log(percentUploaded);
 
 			}, false);
@@ -169,9 +189,21 @@
 			oReq.onload = function(oEvent) {
 
 				if (oReq.status == 200) {
+					
 					var data = JSON.parse(oReq.responseText);
+					
 					console.log("Upload successful");
 					console.log(data);
+
+					jobInProgress = true;
+					submitBtn.dataset.hidden = "true";
+					
+					resultsHolder.dataset.hidden = 'false';
+					resultsHolder.querySelector('h1').textContent = 'Upload successful';
+					resultsHolder.querySelector('p').innerHTML = 'Transcription is underway with the id: <a href="/get/' + data.id + '">' + data.id + '</a>.<br>Results will display when they are ready.';
+
+					currentJobID = data.id;
+
 					(function(jobID, outputType){
 						
 						jobStatus = setInterval(function(){
@@ -184,6 +216,12 @@
 										clearInterval(jobStatus);
 										console.log('FINISHED');
 										displayResults(data, outputType);
+										resultsHolder.querySelector('h1').textContent = 'Transcription results';
+										resultsHolder.querySelector('p').textContent = '';
+										jobInProgress = false;
+										resultsToggle.dataset.hidden = "false";
+									} else {
+										resultsOutput.textContent = 'Transcribing...';
 									}
 
 								})
@@ -222,6 +260,24 @@
 		submitBtn.addEventListener('click', function(e){
 			uploadFormToServer();
 		}, false);
+
+		Array.from(resultsToggle.querySelectorAll('button')).forEach(function(button){
+
+			button.addEventListener('click', function(){
+				
+				if(currentJobID !== undefined && jobInProgress === false){
+
+					checkJobStatus(currentJobID, this.dataset.format)
+						.then(function(data){
+							displayResults(data, data.vtt !== undefined ? 'vtt' : 'json');
+						})
+					;
+				
+				}
+
+			}, false);
+
+		});
 
 	})();
 
