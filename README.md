@@ -126,3 +126,15 @@ This is just a short
 demo of the transcription service
 
 ```
+
+## Languages
+
+The transcription service can transcribe files with different languages in them (though it cannot distinguish between more than one language per file). Telling the service which language the media file you wish to have transcribed predominantly features will likely improve the quality of that transcription.
+
+By default, all media files are assumed to be **British English**, and will be transcribed as such.
+
+To specify a language to be used in the transcription process, pass the language code with a query parameter when you make a request to the transcribe endpoint.
+
+```?token=[VALID_TOKEN]&languagecode=en-us```
+
+For a list of supported language codes, [refer here](https://cloud.google.com/speech/docs/languages).
