@@ -159,7 +159,7 @@ function getClips(pauses){
 
 	}
 
-	return divideLongClips(clips);
+	return clips;
 
 }
 
@@ -236,6 +236,7 @@ function splitFileOnInstancesOfSilence(sourceFilePath, jobID){
 
 				identifyPauses(sourceFilePath)
 					.then(pauses => getClips(pauses))
+					.then(clips => divideLongClips(clips))
 					.then(clips => {
 						debug(clips)
 						return Promise.all( clips.map( (clip, idx) => {
