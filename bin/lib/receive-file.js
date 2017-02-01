@@ -26,7 +26,7 @@ module.exports = function(req){
 					// req.destroy();
 					reject({
 						status : 'err',
-						reason : 'Invalid file'
+						reason : 'Invalid file type'
 					});
 				} else {
 					fileStream = fs.createWriteStream(`${destination}`);
