@@ -4,6 +4,8 @@ const fs = require('fs');
 const ffmpeg = require('ffmpeg-static');
 const shortID = require('shortid').generate;
 
+const getTimeIndexes = require('./generate-time-indexes');
+
 const tmpPath = process.env.TMP_PATH || '/tmp';
 const maxClipSize = process.env.MAX_CLIP_SIZE || 20;
 
@@ -143,7 +145,7 @@ function divideLongClips(clips){
 
 }
 
-function getClips(pauses){
+function getClips(pauses, totalClipDuration){
 	debug('getClips');
 	const clips = [];
 	let lastPause = 0;
@@ -159,6 +161,13 @@ function getClips(pauses){
 
 	}
 
+	clips.push({
+		start : lastPause,
+		duration : totalClipDuration - lastPause
+	});
+
+	debug(clips);
+	debug('totalClipDuration:', totalClipDuration);
 	return clips;
 
 }
@@ -190,7 +199,6 @@ function splitFileAtSpecificIntervals(sourceFilePath, jobID, duration = 3){
 			if(err){
 				reject(err);
 			} else {
-
 
 				const args = [
 					'-i',
@@ -224,6 +232,7 @@ function splitFileAtSpecificIntervals(sourceFilePath, jobID, duration = 3){
 }
 
 function splitFileOnInstancesOfSilence(sourceFilePath, jobID){
+
 	debug('splitFileOnInstancesOfSilence');
 	return new Promise( (resolve, reject) => {
 		const splitFilesDestination = `${tmpPath}/_${jobID}`;
@@ -233,33 +242,40 @@ function splitFileOnInstancesOfSilence(sourceFilePath, jobID){
 			if(err){
 				reject(err);
 			} else {
+				
+				getTimeIndexes([sourceFilePath])
+					.then(clipInfo => {
 
-				identifyPauses(sourceFilePath)
-					.then(pauses => getClips(pauses))
-					.then(clips => divideLongClips(clips))
-					.then(clips => {
-						debug(clips)
-						return Promise.all( clips.map( (clip, idx) => {
+						return identifyPauses(sourceFilePath)
+							.then(pauses => getClips(pauses, clipInfo[0].duration))
+							.then(clips => divideLongClips(clips))
+							.then(clips => {
+								debug(clips)
+								return Promise.all( clips.map( (clip, idx) => {
 
-							const args = [
-								'-ss',
-								clip.start,
-								'-t',
-								clip.duration,
-								'-i',
-								sourceFilePath,
-								`${splitFilesDestination}/out${ zeroPad(idx) }.wav`
-							];
+									const args = [
+										'-ss',
+										clip.start,
+										'-t',
+										clip.duration,
+										'-i',
+										sourceFilePath,
+										`${splitFilesDestination}/out${ zeroPad(idx) }.wav`
+									];
 
-							return runFFmpeg(args);
+									return runFFmpeg(args);
 
-						} ) );
+								} ) );
 
-					})
-					.then(function(){
-						getListOfSplitFiles(splitFilesDestination)
-							.then(files => resolve(files));
+							})
+							.then(function(){
+								getListOfSplitFiles(splitFilesDestination)
+									.then(files => resolve(files));
+								;
+							})
+
 						;
+
 					})
 					.catch(err => {
 						debug(`An error occurred splitting the audio`);

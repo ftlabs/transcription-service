@@ -40,7 +40,7 @@ function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 
 }
 
-function transcribeAudio(audioFile, phrase = ''){
+function transcribeAudio(audioFile, phrase = '', attempt = 0){
 
 	return new Promise( (resolve, reject) => {
 		const phrases = splitPhrases(phrase);
@@ -57,10 +57,20 @@ function transcribeAudio(audioFile, phrase = ''){
 		speech.recognize(audioFile, config, function(err, result) {
 				
 				if(err){
-					reject(err);
+
+					if(attempt < 4){
+						transcribeAudio(audioFile, phrase, attempt + 1)
+							.then(result => resolve(result))
+						;
+					} else {
+						debug(err);
+						reject(err);
+					}
+
 				} else {
 
 					if(result[0] === undefined){
+						debug('Empty result:', result);
 						resolve('');
 					} else {
 						resolve(result[0].transcript);
