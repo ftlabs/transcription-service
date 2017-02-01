@@ -261,6 +261,12 @@
 				}
 			};
 
+			oReq.onerror = function(event){
+				console.log('Request Error', event);
+				oReq.abort();
+				overlay.set('Application Error', 'Sorry, but something went wrong with that request. Please try again, and if it continues to fail, contact FT Labs.', 'OK', true);
+			}
+
 			oReq.send(fileData);
 
 		}

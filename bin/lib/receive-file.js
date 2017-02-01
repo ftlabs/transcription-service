@@ -23,10 +23,11 @@ module.exports = function(req){
 				
 				debug(`Valid file?`, fileInfo.valid);
 				if(!fileInfo.valid){
+					// req.destroy();
 					reject({
-						message : 'Invalid filetype'
+						status : 'err',
+						reason : 'Invalid file'
 					});
-					return;
 				} else {
 					fileStream = fs.createWriteStream(`${destination}`);
 					fileStream.setDefaultEncoding('binary');
@@ -63,9 +64,5 @@ module.exports = function(req){
 		});
 
 	})
-	.catch(err => {
-		fs.unlink(destination, (err) => debug(err));
-		throw err;
-	});
 
 };

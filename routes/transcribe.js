@@ -126,7 +126,21 @@ router.get('/',function(req, res){
 router.use(limitRequestSize);
 router.post('/', function(req, res) {
 	debug(req.body);
-	receiveFile(req).then(file => generateTranscriptions(file, req, res));
+	receiveFile(req, res)
+		.then(file => generateTranscriptions(file, req, res))
+		.catch(err => {
+			debug(err);
+
+			res.status(500);
+			res.json({
+				status : 'error',
+				reason : err.reason || err
+			});
+
+			req.destroy();
+
+		})
+	;
 });
 
 module.exports = router;
