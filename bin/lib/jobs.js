@@ -2,7 +2,7 @@ const debug = require('debug')('bin:lib:jobs');
 const cache = require('lru-cache')({
 	max: 500,
 	length: function (n, key) { return n * 2 + key.length },
-	maxAge: ( (1000 * 60) * 60 ) * 6 // 6 hours 
+	maxAge: ( (1000 * 60) * 30 ) // 30 minutes 
 });
 
 function createTranscriptionJob(ID){
