@@ -23,6 +23,12 @@
 			<label for="vttOutput" class="o-forms__label">VTT</label>
 		</div>
 
+		<label for="languageSelection" class="o-forms__label">Language</label>
+		<small class="o-forms__additional-info">Select the language code to transcribe the video with</small>
+		<select id="languageSelection" class="o-forms__select">
+			{{#each languageOptions}}<option value="{{this}}">{{this}}</option>{{/each}}
+		</select>
+
 		<label for="o-forms-standard" class="o-forms__label">Service Token</label>
 		<small class="o-forms__additional-info"><a href="/token/generate" target="_blank">Get a token</a></small>
 		<input type="text" id="o-forms-standard" placeholder="3d3e5af97225421a8d1b3a88f34022cf" class="o-forms__text tokenInput"></input>
@@ -65,6 +71,7 @@
 		var submitBtn = document.querySelector('.submitData');
 
 		var tokenInput = document.querySelector('.tokenInput');
+		var langaugeSelection = document.querySelector('#languageSelection');
 		var outputRadio = document.querySelector('.outputFormatSelection');
 
 		var resultsHolder = document.querySelector('.transcriptionResults');
@@ -79,6 +86,8 @@
 
 		var finishedButton = document.querySelector('.finishedButton');
 		var previewButton = document.querySelector('.previewButton');
+
+		languageSelection.querySelector('option[value="en-gb"]').setAttribute('selected', '');
 
 		window.addEventListener('drop', function(e){
 			prevent(e);
@@ -185,8 +194,9 @@
 			submitBtn.value = "Uploading 0%";
 			
 			var oReq = new XMLHttpRequest();
-			var queryParameters = "?token=" + tokenInput.value + "&output=" + outputRadio.querySelector('input:checked').value;
-
+			var queryParameters = "?token=" + tokenInput.value + "&output=" + outputRadio.querySelector('input:checked').value + "&languagecode=" + langaugeSelection.value;
+			console.log(queryParameters);
+			
 			oReq.upload.addEventListener('progress', function(evt){
 				
 				var percentUploaded = (evt.loaded / evt.total) * 100;

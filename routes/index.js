@@ -3,6 +3,7 @@ const router = express.Router();
 const s3o = require('s3o-middleware');
 
 const validFiles = require('../bin/lib/valid-file');
+const validLanguages = require('../bin/lib/valid-language-codes');
 
 router.get('/', s3o, function(req, res, next){
 
@@ -10,7 +11,8 @@ router.get('/', s3o, function(req, res, next){
 		title : 'FT Labs Transcription Service',
 		serviceName : process.env.SERVICE_NAME || 'FT Labs Transcription Service',
 		shortServiceName : process.env.SERVICE_NAME || 'FT Labs Transcriptions',
-		validFileTypes : validFiles.getTypes
+		validFileTypes : validFiles.getTypes,
+		languageOptions : validLanguages.list
 	});
 
 });	

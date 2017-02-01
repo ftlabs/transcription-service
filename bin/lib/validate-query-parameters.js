@@ -3,7 +3,7 @@ const validLanguageCodes = require('./valid-language-codes');
 module.exports = function(req, res, next){
 
 	if(req.query.languagecode){
-		if(!validLanguageCodes(req.query.languagecode)){
+		if(!validLanguageCodes.check(req.query.languagecode)){
 			res.status(422);
 			res.json({
 				status : 'error',
