@@ -135,6 +135,6 @@ By default, all media files are assumed to be **British English**, and will be t
 
 To specify a language to be used in the transcription process, pass the language code with a query parameter when you make a request to the transcribe endpoint.
 
-```?token=[VALID_TOKEN]&languagecode=en-us```
+`?token=[VALID_TOKEN]&languagecode=en-us`
 
 For a list of supported language codes, [refer here](https://cloud.google.com/speech/docs/languages).
