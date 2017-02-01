@@ -14,6 +14,7 @@ const transcribeAudio = require('../bin/lib/transcribe-audio');
 const cleanUp = require('../bin/lib/clean-up');
 const getTimeIndexes = require('../bin/lib/generate-time-indexes');
 const jobs = require('../bin/lib/jobs');
+const validateQueryParameters = require('../bin/lib/validate-query-parameters');
 
 function prepareAudio(filePath, jobID, duration){
 
@@ -44,7 +45,7 @@ function generateTranscriptions(audioFile, req, res){
 	// Convert the audio to .wav format
 	prepareAudio(audioFile, jobID, process.env.AUDIO_MAX_DURATION_TIME || 55)
 		// Get a transcription of the whole audio to serve as a guide for the chunks
-		.then(audio => transcribeAudio(audio))
+		.then(audio => transcribeAudio(audio, undefined, req.query.languagecode))
 		.then(transcriptions => {
 			debug('Whole transcriptions:', transcriptions);
 
@@ -70,7 +71,7 @@ function generateTranscriptions(audioFile, req, res){
 				})
 				.then(data => {
 					// Transcribe all of the smaller audio chunks
-					return transcribeAudio(data.files, transcriptions)
+					return transcribeAudio(data.files, transcriptions, req.query.languagecode)
 						.then(transcriptions => {
 							// Link up the small audio transcriptions with the 
 							// time indexes of each file
@@ -108,6 +109,7 @@ function generateTranscriptions(audioFile, req, res){
 }
 
 router.use(requireToken);
+router.use(validateQueryParameters);
 
 router.get('/',function(req, res){
 

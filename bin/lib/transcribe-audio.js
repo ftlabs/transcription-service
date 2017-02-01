@@ -17,7 +17,7 @@ const speech = new Speech({
 	credentials: JSON.parse(process.env.GCLOUD_CREDS)
 });
 
-function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
+function splitPhrases(phrase = "", chunkSize = 90){
 
 	const words = phrase.split(' ');
 
@@ -40,7 +40,7 @@ function splitPhrases(phrase = "", chunkSize = 100, respectSpaces = true){
 
 }
 
-function transcribeAudio(audioFile, phrase = '', attempt = 0){
+function transcribeAudio(audioFile, phrase = '', language, attempt = 0){
 
 	return new Promise( (resolve, reject) => {
 		const phrases = splitPhrases(phrase);
@@ -51,6 +51,7 @@ function transcribeAudio(audioFile, phrase = '', attempt = 0){
 			speechContext : {
 				phrases
 			},
+			languageCode : language || 'en-GB',
 			verbose: true
 		};
 
@@ -59,7 +60,7 @@ function transcribeAudio(audioFile, phrase = '', attempt = 0){
 				if(err){
 
 					if(attempt < 4){
-						transcribeAudio(audioFile, phrase, attempt + 1)
+						transcribeAudio(audioFile, phrase, language, attempt + 1)
 							.then(result => resolve(result))
 						;
 					} else {
@@ -85,7 +86,7 @@ function transcribeAudio(audioFile, phrase = '', attempt = 0){
 
 }
 
-module.exports = function(audioFiles, phrase){
+module.exports = function(audioFiles, phrase, language = 'en-GB'){
 
 	debug("audioFiles", audioFiles);
 
@@ -93,7 +94,7 @@ module.exports = function(audioFiles, phrase){
 		audioFiles = [audioFiles];
 	}
 	console.time('transcribe');
-	return Promise.all( audioFiles.map(file => { return transcribeAudio(file, phrase) } ) )
+	return Promise.all( audioFiles.map(file => { return transcribeAudio(file, phrase, language) } ) )
 		.then(transcriptions => {
 			console.time('transcribe');
 			return transcriptions;
