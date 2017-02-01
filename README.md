@@ -138,3 +138,17 @@ To specify a language to be used in the transcription process, pass the language
 `?token=[VALID_TOKEN]&languagecode=en-us`
 
 For a list of supported language codes, [refer here](https://cloud.google.com/speech/docs/languages).
+
+## Process
+
+The process for transcribing the content is as follows:
+
+1. The passed media file is converted into a WAV file
+2. If the converted wav file is longer than 30 seconds, it is divided into 30 second chunks.
+3. Each 30 second chunk is transcribed with the Google Speech API
+4. When all transcriptions have completed, they are concatenated to form a transcript of the original WAV file in its entirety.
+5. The original WAV file is then split according at each point of silence (< -20DBs) detected in the audio that is more than 0.2s long.
+	- if no silences are detected, the WAV file is divided into equal 4 second long chunks
+	- If the time between silences (a clip) is longer than 8 seconds, the clip is divided into 4 second chunks
+6. These individual chunks are then transcribed with the same settings that were used to transribe the 30 second chunks earlier in the process. Each chunk has the combined transcript of the original WAV file passed along with it as a 'phrase' to help the Google Speech API determine what each chunk is supposed to say.
+7. On completion of the transcriptions for each chunk, the data is returned to the client.
