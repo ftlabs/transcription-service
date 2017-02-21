@@ -1,31 +1,30 @@
 const debug = require('debug')('bin:lib:jobs');
-const cache = require('lru-cache')({
-	max: 500,
-	length: function (n, key) { return n * 2 + key.length },
-	maxAge: ( (1000 * 60) * 30 ) // 30 minutes 
-});
 
-function createTranscriptionJob(ID){
+const Job = require('./Job');
+
+const maximumConcurrentJobs = process.env.MAX_JOBS_RUNNING || 5;
+const jobsQueue = [];
+const jobsInProgress = [];
+const activeJobs = {};
+
+function createTranscriptionJob(ID, language){
 
 	if(getTranscriptionJob(ID) !== false){
 		throw `A job with ${ID} already exists`;
 	}
 
-	const job = {
-		ID,
-		finished : false,
-		transcription : undefined
-	};
+	const job = new Job(ID, language);
 
-	cache.set(ID, JSON.stringify(job) );
+	jobsQueue.push(job);
+	activeJobs[ID] = job;
 
 }
 
 function getTranscriptionJob(ID){
 
-	debug('GET', cache.get(ID));
+	debug('GET', activeJobs[ID]);
 	
-	const job = cache.get(ID) === undefined ? undefined : JSON.parse(cache.get(ID));
+	const job = activeJobs[ID] === undefined ? undefined : activeJobs[ID];
 	
 	if(job === undefined){
 		return false;
@@ -47,43 +46,33 @@ function checkTranscriptionJob(ID){
 
 }
 
+function workThroughQueue(){
 
-function completeTranscriptionJob(ID, transcription){
-
-	const job = getTranscriptionJob(ID);
-	
-	if(!job){
-		throw `Job with ID '${ID}' does not exist`;
+	while(jobsInProgress.length < maximumConcurrentJobs && jobsQueue.length > 0){
+		const jobToStart = jobsQueue.shift();
+		jobToStart.start();
+		jobsInProgress.push(jobToStart);
 	}
-
-	job.transcription = transcription;
-	job.finished = true;
-	debug('Finished Job', job);
-
-	cache.set(ID, JSON.stringify(job) );
 
 }
 
-function setJobAsFailed(ID, reason){
-	
-	const job = getTranscriptionJob(ID);
-	
-	if(!job){
-		debug(`Job with ID '${ID}' does not exist`);
-		return false;
-	}
+function checkJobs(){
 
-	job.finished = true;
-	job.failed = true;
-	job.reason = reason || '';
-	cache.set(ID, JSON.stringify(job) );
+	jobsInProgress.forEach( (job, idx) => {
+
+		if(job.finished){
+			jobsInProgress.splice(idx, 1);
+		}
+
+	});
 
 }
+
+setInterval(checkJobs, 1000);
+setInterval(workThroughQueue, 5000);
 
 module.exports = {
 	create : createTranscriptionJob,
 	check : checkTranscriptionJob,
-	get : getTranscriptionJob,
-	complete : completeTranscriptionJob,
-	failed : setJobAsFailed
+	get : getTranscriptionJob
 };
