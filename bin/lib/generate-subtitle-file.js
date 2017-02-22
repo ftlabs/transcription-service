@@ -1,5 +1,5 @@
 /*
-A WebVTT timestamp consists of the following components, in the given order:
+A Websubtitle timestamp consists of the following components, in the given order:
 
 Optionally (required if hours is non-zero):
 Two or more ASCII digits, representing the hours as a base ten integer.
@@ -11,7 +11,7 @@ A U+002E FULL STOP character (.).
 Three ASCII digits, representing the thousandths of a second seconds-frac as a base ten integer.
 */
 
-const debug = require('debug')('bin:lib:generate-vtt-file');
+const debug = require('debug')('bin:lib:generate-subtitle-file');
 
 function padNumber(num){
 	
@@ -27,7 +27,7 @@ function padNumber(num){
 
 }
 
-function convertSecondsToTimestamp(seconds){
+function convertSecondsToTimestamp(seconds, isSRT = false){
 
 	const d = Number(seconds);
 	const h = Math.floor(d / 3600);
@@ -38,20 +38,20 @@ function convertSecondsToTimestamp(seconds){
 	const Minutes = padNumber(m);
 	const Seconds = padNumber(s);
 
-	return `${Hours}:${Minutes}:${Seconds}.000`;
+	return `${Hours}:${Minutes}:${Seconds}${isSRT ? ',' : '.'}000`;
 
 };
 
-module.exports = function(transcriptions){
+module.exports = function(transcriptions, isSRT = false){
 
-	let VTT = 'WEBVTT\n\n';
+	let subtitle = isSRT ? '' : 'WEBVTT\n\n';
 
 	transcriptions.forEach( (t, idx) => {
-		const VTTContent = (idx + 1) + "\n" + convertSecondsToTimestamp(t.timeOffsets.start) + " --> " + convertSecondsToTimestamp(t.timeOffsets.end) + "\n" + t.transcription + "\n\n";
-		debug(VTTContent);
-		VTT += VTTContent;
+		const subtitleContent = (idx + 1) + "\n" + convertSecondsToTimestamp(t.timeOffsets.start, isSRT) + " --> " + convertSecondsToTimestamp(t.timeOffsets.end, isSRT) + "\n" + t.transcription + "\n\n";
+		debug(subtitleContent);
+		subtitle += subtitleContent;
 	});
 
-	return Promise.resolve(VTT);
+	return Promise.resolve(subtitle);
 
 };
