@@ -1,4 +1,5 @@
 const debug = require('debug')('bin:lib:jobs');
+const os = require('os');
 const fs = require('fs');
 const shortID = require('shortid').generate;
 
@@ -8,7 +9,7 @@ const Job = require('./job');
 
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
-const maximumConcurrentJobs = process.env.MAX_JOBS_RUNNING || 5;
+const maximumConcurrentJobs = process.env.MAX_JOBS_RUNNING || os.cpus().length || 5;
 const jobsQueue = [];
 const jobsInProgress = [];
 const activeJobs = {};
