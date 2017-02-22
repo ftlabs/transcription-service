@@ -11,9 +11,6 @@ const tmpPath = process.env.TMP_PATH || '/tmp';
 
 module.exports = function(url){
 
-	const jobID = shortID();
-	const destination = `${tmpPath}/${jobID}`;
-
 	return fetch(url, {method : "HEAD"})
 		.then(res => {
 			if(res.status !== 200){
@@ -43,12 +40,7 @@ module.exports = function(url){
 			return new Promise( ( resolve, reject ) => {
 				
 				let firstChunk = true;
-
-				debug('Writing file to:', destination);
-		
-				const fileStream = fs.createWriteStream(destination);
-				fileStream.setDefaultEncoding('binary');
-				res.body.pipe(fileStream);
+				const chunks = [];
 
 				res.body.on('data', chunk => {
 
@@ -58,18 +50,18 @@ module.exports = function(url){
 						if(validFile(chunk).valid === false){
 							res.body.end();
 							reject('Not a valid file type');
-							fileStream.end();
-							fs.unlink(destination);
+							return false;
+						} else {
+							chunks.push(chunk);
 						}
-
+					} else {
+						chunks.push(chunk);
 					}
 
 				});
 
 				res.body.on('end', function(){
-					debug("Stream closed.", destination);
-					fileStream.end();
-					resolve(destination);
+					resolve(Buffer.concat(chunks));
 				});
 
 			});
@@ -77,7 +69,6 @@ module.exports = function(url){
 		})
 		.catch(err => {
 			debug(err);
-			fs.unlink(destination);
 			throw err;
 		})
 	;
