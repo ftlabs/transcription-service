@@ -3,13 +3,13 @@ const express = require('express');
 const router = express.Router();
 
 const jobs = require('../bin/lib/jobs');
-const generateVTT = require('../bin/lib/generate-vtt-file');
+const generateSubtitles = require('../bin/lib/generate-subtitle-file');
 
 router.get('/:jobID', (req, res) => {
 
 	const jobID = req.params.jobID;
 	const job = jobs.get(jobID);
-	const asVTT = req.query.output === 'vtt';
+	const asSubtitleFile = req.query.output === 'vtt' || req.query.output === 'srt';
 
 	if(job === false){
 		res.status(404);
@@ -30,11 +30,11 @@ router.get('/:jobID', (req, res) => {
 				return;
 			}
 
-			if(asVTT){
+			if(asSubtitleFile){
 
-				generateVTT(job.transcription.transcribedChunks)
+				generateSubtitles(job.transcription.transcribedChunks, req.query.output === 'srt')
 					.then(VTT => {
-						res.type('text/vtt');
+						res.type(`text/${req.query.output === 'vtt' ? 'vtt' : 'srt'}`);
 						res.send(VTT);
 					})
 					.catch(err => {
