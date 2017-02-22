@@ -4,7 +4,7 @@ const shortID = require('shortid').generate;
 
 const bucket = require('./bucket-interface');
 
-const Job = require('./Job');
+const Job = require('./job');
 
 const tmpPath = process.env.TMP_PATH || '/tmp';
 
