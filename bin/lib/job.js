@@ -20,28 +20,42 @@ class Job {
 	}
 
 	start(){
+		debug(`Starting Job ${this.id}`);
+		const destination = `${tmpPath}/${this.id}`;
 
-		bucket.get(this.id)
-			.then(data => {
+		new Promise( (resolve, reject) => {
 
-				const destination = `${tmpPath}/${this.id}`;
+				fs.access(destination, err => {
 
-				return new Promise( (resolve, reject) => {
-						fs.writeFile(destination, data.Body, err => {
-							if(err){
-								reject(err);
-							} else {
-								resolve(`${tmpPath}/${this.id}`);
-							}
-						})
-					})
-					.catch(err => {
-						debug(err);
-						this.failed = true;
-					})
-				;
+					if(err){
+						debug('Media source is not on file system. Retrieving from S3 Bucket');
+						bucket.get(this.id)
+							.then(data => {
+								debug(`Media for Job ${this.id} retrived from S3. Writing to filesystem.`);
+								fs.writeFile(destination, data.Body, err => {
+									if(err){
+										reject(err);
+									} else {
+										resolve(`${tmpPath}/${this.id}`);
+									}
+								})
 
-			})
+
+							})
+							.catch(err => {
+								debug(err);
+								this.failed = true;
+							})
+						;
+
+					} else {
+						debug('Media is already in file system');
+						resolve(destination);
+					}
+
+				});
+
+			})	
 			.then(filePath => {
 				prepareAudio(filePath, this.id, process.env.AUDIO_MAX_DURATION_TIME || 55)
 					// Get a transcription of the whole audio to serve as a guide for the chunks

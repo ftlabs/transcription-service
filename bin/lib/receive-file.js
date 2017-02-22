@@ -15,7 +15,7 @@ module.exports = function(req){
 		const chunks = [];
 
 		req.on('data', function (data) {
-			debug(data);
+
 			if(requestSize === 0){
 				fileInfo = checkFileType(data);
 				
@@ -33,8 +33,6 @@ module.exports = function(req){
 			} else {
 				chunks.push(data);
 			}
-
-			debug(`Got ${data.length} bytes. Total: ${requestSize}`);
 
 		});
 

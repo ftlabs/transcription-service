@@ -1,24 +1,69 @@
 const debug = require('debug')('bin:lib:jobs');
+const fs = require('fs');
+const shortID = require('shortid').generate;
+
+const bucket = require('./bucket-interface');
 
 const Job = require('./Job');
+
+const tmpPath = process.env.TMP_PATH || '/tmp';
 
 const maximumConcurrentJobs = process.env.MAX_JOBS_RUNNING || 5;
 const jobsQueue = [];
 const jobsInProgress = [];
 const activeJobs = {};
 
-function createTranscriptionJob(ID, language){
+function newTranscriptionJob(ID, language){
 
 	if(getTranscriptionJob(ID) !== false){
 		throw `A job with ${ID} already exists`;
+	} else {
+		debug(`Creating job ${ID}`);
 	}
 
 	const job = new Job(ID, language);
 
-	jobsQueue.push(job);
 	activeJobs[ID] = job;
+	jobsQueue.push(job);
 
 }
+
+function createTranscriptionJob(file, language){
+
+	const jobID = shortID();
+
+	if(jobsQueue.length < maximumConcurrentJobs){
+
+		debug('Possible to start job immediately. Writing file to system...');
+		return new Promise( (resolve, reject) => {
+
+			const destination = `${tmpPath}/${jobID}`;
+			fs.writeFile(destination, file, (err) => {
+
+				if(err){
+					reject(err);
+				} else {
+					newTranscriptionJob(jobID, language);
+					resolve(jobID);
+				}
+
+			});
+
+		} );
+
+	} else {
+		debug('Job has to wait to begin, uploading file to S3 bucket...');
+		return bucket.put(jobID, file)
+			.then(function(){
+				newTranscriptionJob(jobID);
+				return jobID;
+			})
+		;
+
+	}
+
+}
+
 
 function getTranscriptionJob(ID){
 
@@ -68,11 +113,21 @@ function checkJobs(){
 
 }
 
+function numberOfJobsInProgress(){
+	return jobsInProgress.length;
+}
+
+function getMaximumNumberOfConcurrentJobs(){
+	return maximumConcurrentJobs;
+}
+
 setInterval(checkJobs, 1000);
 setInterval(workThroughQueue, 5000);
 
 module.exports = {
 	create : createTranscriptionJob,
 	check : checkTranscriptionJob,
-	get : getTranscriptionJob
+	get : getTranscriptionJob,
+	number : numberOfJobsInProgress,
+	max : getMaximumNumberOfConcurrentJobs
 };
