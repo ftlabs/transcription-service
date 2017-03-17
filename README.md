@@ -1,7 +1,7 @@
 # FT Labs Transcription Service.
 Time-based transcriptions of media content, powered by Google's Speech APIs
 
-This service currentlty lives on [Heroku](https://ftlabs-transcription.herokuapp.com).
+This service currently lives on [Heroku](https://ftlabs-transcription.herokuapp.com).
 
 ## Media Formats
 
