@@ -21,6 +21,8 @@
 			<label for="jsonOutput" class="o-forms__label">JSON</label>
 			<input type="radio" name="radio" value="vtt" class="o-forms__radio" id="vttOutput"></input>
 			<label for="vttOutput" class="o-forms__label">VTT</label>
+			<input type="radio" name="radio" value="srt" class="o-forms__radio" id="srtOutput"></input>
+			<label for="srtOutput" class="o-forms__label">SRT</label>
 		</div>
 
 		<label for="languageSelection" class="o-forms__label">Language</label>
@@ -46,6 +48,7 @@
 	<div class="o-buttons__group alternativeResults" data-hidden="true">
 		<button class="o-buttons" aria-selected="false" data-format="json">JSON</button>
 		<button class="o-buttons" data-format="vtt">VTT</button>
+		<button class="o-buttons" data-format="srt">SRT</button>
 	</div>
 
 	<pre class="output"></pre>
@@ -143,7 +146,7 @@
 
 		function displayResults(data, outputType){
 
-			resultsOutput.textContent = outputType === 'json' ? JSON.stringify(data) : data.vtt;
+			resultsOutput.textContent = outputType === 'json' ? JSON.stringify(data) : data.output;
 			resultsHolder.dataset.hidden = "false";
 			
 		}
@@ -162,15 +165,17 @@
 					
 					if(res.status === 200){
 
-						if(outputType === 'vtt'){
+						if(outputType !== 'json'){
+
 							return res.text()
-								.then(function(VTT){
+								.then(function(data){
 									return {
 										finished : true,
-										vtt: VTT
+										output: data
 									};
 								})
 							;
+
 						} else {
 							return res.json();
 						}
@@ -317,7 +322,7 @@
 			console.log('Click');
 			checkJobStatus(currentJobID, 'vtt')
 				.then(function(data){					
-					videoPreview.show(URL.createObjectURL(fileData), URL.createObjectURL(new File([data.vtt], 'track.vtt')));
+					videoPreview.show(URL.createObjectURL(fileData), URL.createObjectURL(new File([data.output], 'track.vtt')));
 				})
 			;
 		}, false);
@@ -328,9 +333,11 @@
 				
 				if(currentJobID !== undefined && jobInProgress === false){
 
-					checkJobStatus(currentJobID, this.dataset.format)
+					const selectedOutput = this.dataset.format
+
+					checkJobStatus(currentJobID, selectedOutput)
 						.then(function(data){
-							displayResults(data, data.vtt !== undefined ? 'vtt' : 'json');
+							displayResults(data, data.output !== undefined ? selectedOutput : 'json');
 						})
 					;
 				
