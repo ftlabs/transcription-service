@@ -49,6 +49,11 @@ You can upload a file for transcription like so:
 
 ### Passing a resource for transcriptions
 
+You can also point the transcription service to a valid resource on the internet for transcription. These files mist be publically accessible, and are still subject to the same constraints as files that are uploaded for transcription.
+
+You can pass a url pointing to the resource for transcription like so:
+
+`curl https://ftlabs-transcription.herokuapp.com/transcribe?resource=[URL_FOR_FILE_TO_BE_TRANSCRIBED]&token=VALID_TOKEN`
 
 ### Once the resource has been receieved
 
