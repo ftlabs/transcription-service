@@ -155,5 +155,5 @@ The process for transcribing the content is as follows:
 5. The original WAV file is then split according at each point of silence (< -20DBs) detected in the audio that is more than 0.2s long.
 	- if no silences are detected, the WAV file is divided into equal 4 second long chunks
 	- If the time between silences (a clip) is longer than 8 seconds, the clip is divided into 4 second chunks
-6. These individual chunks are then transcribed with the same settings that were used to transribe the 30 second chunks earlier in the process. Each chunk has the combined transcript of the original WAV file passed along with it as a 'phrase' to help the Google Speech API determine what each chunk is supposed to say.
+6. These individual chunks are then transcribed with the same settings that were used to transcribe the 30 second chunks earlier in the process. Each chunk has the combined transcript of the original WAV file passed along with it as a 'phrase' to help the Google Speech API determine what each chunk is supposed to say.
 7. On completion of the transcriptions for each chunk, the data is returned to the client.
